@@ -1,0 +1,6 @@
+CONNECT 'jdbc:derby:/opt/ScadaBR/tomcat/webapps/ScadaBR/db/scadabrDB';
+CALL SYSCS_UTIL.SYSCS_IMPORT_TABLE('APP','DATASOURCES','/backup/datasources.del',null,null,null,0);
+CALL SYSCS_UTIL.SYSCS_IMPORT_TABLE('APP','DATAPOINTS','/backup/datapoints.del',null,null,null,0);
+CALL SYSCS_UTIL.SYSCS_IMPORT_TABLE('APP','WATCHLISTS','/backup/watchlists.del',null,null,null,0);
+CALL SYSCS_UTIL.SYSCS_IMPORT_TABLE('APP','WATCHLISTPOINTS','/backup/watchlistpoints.del',null,null,null,0);
+SHOW TABLES; 

@@ -1,0 +1,134 @@
+services:
+
+#PLC
+  plc1:
+    image: plc
+    pull_policy: never
+    container_name: plc1
+    build:
+      context: ./plc
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/.plc_ready"]
+      interval: 2s
+      timeout: 1s
+      retries: 30
+      start_period: 5s
+
+  plc2:
+    image: plc
+    pull_policy: never
+    container_name: plc2
+    build:
+      context: ./plc
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/.plc_ready"]
+      interval: 2s
+      timeout: 1s
+      retries: 30
+      start_period: 5s
+
+  plc3:
+    image: plc
+    pull_policy: never
+    container_name: plc3
+    build:
+      context: ./plc
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/.plc_ready"]
+      interval: 2s
+      timeout: 1s
+      retries: 30
+      start_period: 5s
+
+  plc4:
+    image: plc
+    pull_policy: never
+    container_name: plc4
+    build:
+      context: ./plc
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/.plc_ready"]
+      interval: 2s
+      timeout: 1s
+      retries: 30
+      start_period: 5s
+      
+# HIL
+  hil1:
+    image: hil
+    pull_policy: never
+    container_name: hil1
+    build:
+      context: ./hil
+      dockerfile: Dockerfile
+    environment:
+      - plc=1
+
+  hil2:
+    image: hil
+    pull_policy: never
+    container_name: hil2
+    build:
+      context: ./hil
+      dockerfile: Dockerfile
+    environment:
+      - plc=2
+
+  hil3:
+    image: hil
+    pull_policy: never
+    container_name: hil3
+    build:
+      context: ./hil
+      dockerfile: Dockerfile
+    environment:
+      - plc=3
+
+  hil4:
+    image: hil
+    pull_policy: never
+    container_name: hil4
+    build:
+      context: ./hil
+      dockerfile: Dockerfile
+    environment:
+      - plc=4
+
+# SCADA
+  scada:
+    image: scada
+    pull_policy: never
+    container_name: scada
+    build:
+      context: ./scada
+      dockerfile: Dockerfile
+    volumes:
+      - scada:/opt/ScadaBR/tomcat/webapps/ScadaBR/db
+    depends_on:
+      plc1:
+        condition: service_healthy
+      plc2:
+        condition: service_healthy
+      plc3:
+        condition: service_healthy
+      plc4:
+        condition: service_healthy
+
+volumes:
+  scada:
+
+
+
+

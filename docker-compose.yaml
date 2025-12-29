@@ -75,6 +75,9 @@ services:
       dockerfile: Dockerfile
     environment:
       - plc=1
+    depends_on:
+      plc1:
+        condition: service_healthy
 
   hil2:
     image: hil
@@ -85,6 +88,9 @@ services:
       dockerfile: Dockerfile
     environment:
       - plc=2
+    depends_on:
+      plc2:
+        condition: service_healthy
 
   hil3:
     image: hil
@@ -95,6 +101,9 @@ services:
       dockerfile: Dockerfile
     environment:
       - plc=3
+    depends_on:
+      plc3:
+        condition: service_healthy
 
   hil4:
     image: hil
@@ -105,6 +114,9 @@ services:
       dockerfile: Dockerfile
     environment:
       - plc=4
+    depends_on:
+      plc4:
+        condition: service_healthy
 
 # SCADA
   scada:

@@ -16,6 +16,11 @@ services:
       timeout: 1s
       retries: 30
       start_period: 5s
+    networks:
+      ics:
+        ipv4_address: 192.168.1.1
+    ports:
+      - 8081:8080
 
   plc2:
     image: plc
@@ -32,6 +37,11 @@ services:
       timeout: 1s
       retries: 30
       start_period: 5s
+    networks:
+      ics:
+        ipv4_address: 192.168.2.1
+    ports:
+      - 8082:8080
 
   plc3:
     image: plc
@@ -48,6 +58,11 @@ services:
       timeout: 1s
       retries: 30
       start_period: 5s
+    networks:
+      ics:
+        ipv4_address: 192.168.3.1
+    ports:
+      - 8083:8080
 
   plc4:
     image: plc
@@ -64,6 +79,11 @@ services:
       timeout: 1s
       retries: 30
       start_period: 5s
+    networks:
+      ics:
+        ipv4_address: 192.168.4.1
+    ports:
+      - 8084:8080
       
 # HIL
   hil1:
@@ -75,6 +95,12 @@ services:
       dockerfile: Dockerfile
     environment:
       - plc=1
+    networks:
+      ics:
+        ipv4_address: 192.168.1.2
+    depends_on:
+      plc1:
+        condition: service_healthy
 
   hil2:
     image: hil
@@ -85,6 +111,12 @@ services:
       dockerfile: Dockerfile
     environment:
       - plc=2
+    networks:
+      ics:
+        ipv4_address: 192.168.2.2
+    depends_on:
+      plc2:
+        condition: service_healthy
 
   hil3:
     image: hil
@@ -95,6 +127,12 @@ services:
       dockerfile: Dockerfile
     environment:
       - plc=3
+    networks:
+      ics:
+        ipv4_address: 192.168.3.2
+    depends_on:
+      plc3:
+        condition: service_healthy
 
   hil4:
     image: hil
@@ -105,6 +143,12 @@ services:
       dockerfile: Dockerfile
     environment:
       - plc=4
+    networks:
+      ics:
+        ipv4_address: 192.168.4.2
+    depends_on:
+      plc4:
+        condition: service_healthy
 
 # SCADA
   scada:
@@ -125,9 +169,20 @@ services:
         condition: service_healthy
       plc4:
         condition: service_healthy
+    networks:
+      - ics
+    ports:
+      - 8080:8080
 
 volumes:
   scada:
+
+networks:
+  ics:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.0.0/16
 
 
 

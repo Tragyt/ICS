@@ -16,6 +16,10 @@ services:
       timeout: 1s
       retries: 30
       start_period: 5s
+    depends_on:
+      ziti-tunneler-plc1:
+          condition: service_healthy
+    network_mode: service:ziti-tunneler-plc1
 
   plc2:
     image: plc
@@ -32,6 +36,10 @@ services:
       timeout: 1s
       retries: 30
       start_period: 5s
+    depends_on:
+      ziti-tunneler-plc2:
+          condition: service_healthy
+    network_mode: service:ziti-tunneler-plc2
 
   plc3:
     image: plc
@@ -48,6 +56,10 @@ services:
       timeout: 1s
       retries: 30
       start_period: 5s
+    depends_on:
+      ziti-tunneler-plc3:
+          condition: service_healthy
+    network_mode: service:ziti-tunneler-plc3
 
   plc4:
     image: plc
@@ -64,6 +76,10 @@ services:
       timeout: 1s
       retries: 30
       start_period: 5s
+    depends_on:
+      ziti-tunneler-plc4:
+          condition: service_healthy
+    network_mode: service:ziti-tunneler-plc4
       
 # HIL
   hil1:
@@ -78,6 +94,9 @@ services:
     depends_on:
       plc1:
         condition: service_healthy
+      ziti-tunneler-hil1:
+          condition: service_healthy
+    network_mode: service:ziti-tunneler-hil1
 
   hil2:
     image: hil
@@ -91,6 +110,9 @@ services:
     depends_on:
       plc2:
         condition: service_healthy
+      ziti-tunneler-hil2:
+          condition: service_healthy
+    network_mode: service:ziti-tunneler-hil2
 
   hil3:
     image: hil
@@ -104,6 +126,9 @@ services:
     depends_on:
       plc3:
         condition: service_healthy
+      ziti-tunneler-hil3:
+          condition: service_healthy
+    network_mode: service:ziti-tunneler-hil3
 
   hil4:
     image: hil
@@ -117,6 +142,9 @@ services:
     depends_on:
       plc4:
         condition: service_healthy
+      ziti-tunneler-hil4:
+          condition: service_healthy
+    network_mode: service:ziti-tunneler-hil4
 
 # SCADA
   scada:
@@ -137,9 +165,16 @@ services:
         condition: service_healthy
       plc4:
         condition: service_healthy
+      ziti-tunneler-scada:
+          condition: service_healthy
+    network_mode: service:ziti-tunneler-scada
 
 volumes:
   scada:
+
+networks:
+  ziti:
+    driver: bridge
 
 
 

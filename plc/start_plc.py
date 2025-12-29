@@ -8,9 +8,6 @@ from bs4 import BeautifulSoup
 load_dotenv() 
 s = requests.Session()
 
-print(os.getenv("OPENPLC_ADMIIN"))
-print(os.getenv("OPENPLC_PASSWORD"))
-
 soup = BeautifulSoup(s.get("http://localhost:8080/login").text, "html.parser")
 csrf = soup.find("input", {"name": "csrf_token"})["value"]
 login = {"username": os.getenv("OPENPLC_ADMIIN"), "password": os.getenv("OPENPLC_PASSWORD"), "csrf_token": csrf}

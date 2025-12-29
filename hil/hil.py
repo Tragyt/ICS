@@ -3,7 +3,7 @@ import os
 
 from pyModbusTCP.client import ModbusClient
 
-PLC_ADDRESS = "192.168." + os.environ['plc'] + '.1'
+PLC_ADDRESS = 'ziti' + '.plc' + os.environ['plc']
 client = ModbusClient(PLC_ADDRESS, 502)
 
 def start_plc():

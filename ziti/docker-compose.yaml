@@ -1,0 +1,628 @@
+services:
+
+# CONTROLLER
+  ziti-controller:
+    image: "${ZITI_IMAGE}:${ZITI_VERSION}"
+    container_name: ziti-controller
+    healthcheck:
+      test: curl -m 1 -s -k -f https://${ZITI_CTRL_EDGE_ADVERTISED_ADDRESS:-ziti-edge-controller}:${ZITI_CTRL_EDGE_ADVERTISED_PORT:-1280}/edge/client/v1/version
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    env_file:
+      - ./.env
+    ports:
+      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_CTRL_EDGE_ADVERTISED_PORT:-1280}:${ZITI_CTRL_EDGE_ADVERTISED_PORT:-1280}
+      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_CTRL_ADVERTISED_PORT:-6262}:${ZITI_CTRL_ADVERTISED_PORT:-6262}
+    environment:
+      - ZITI_CTRL_NAME=${ZITI_CTRL_NAME:-ziti-edge-controller}
+      - ZITI_CTRL_EDGE_ADVERTISED_ADDRESS=${ZITI_CTRL_EDGE_ADVERTISED_ADDRESS:-ziti-edge-controller}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-1280}
+      - ZITI_CTRL_EDGE_IP_OVERRIDE=${ZITI_CTRL_EDGE_IP_OVERRIDE:-127.0.0.1}
+      - ZITI_CTRL_ADVERTISED_PORT=${ZITI_CTRL_ADVERTISED_PORT:-6262}
+      - ZITI_EDGE_IDENTITY_ENROLLMENT_DURATION=${ZITI_EDGE_IDENTITY_ENROLLMENT_DURATION}
+      - ZITI_ROUTER_ENROLLMENT_DURATION=${ZITI_ROUTER_ENROLLMENT_DURATION}
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+    networks:
+      ziti:
+        aliases:
+          - ziti-edge-controller
+    volumes:
+      - ziti-ctrl:/persistent
+    entrypoint:
+      - "/var/openziti/scripts/run-controller.sh"
+
+  ziti-controller-init-container:
+    image: "${ZITI_IMAGE}:${ZITI_VERSION}"
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    environment:
+      - ZITI_CTRL_EDGE_ADVERTISED_ADDRESS=${ZITI_CTRL_EDGE_ADVERTISED_ADDRESS:-ziti-edge-controller}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-1280}
+    env_file:
+      - ./.env
+    networks:
+      ziti:
+    volumes:
+      - ziti-ctrl:/persistent
+    entrypoint:
+      - "/var/openziti/scripts/run-with-ziti-cli.sh"
+    command:
+      - "/var/openziti/scripts/access-control.sh"
+
+
+# PLC TUNNELER
+  ziti-tunneler-plc1:
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router}
+    container_name: ziti-tunneler-plc1
+    depends_on:
+      ziti-tunneler-plc-init1:
+        condition: service_completed_successfully
+    user: ${ZIGGY_UID:-2171}
+    volumes:
+      - ziti-host1:/ziti-router
+      - ./ziti/enroll.sh:/ziti-router/enroll.sh
+    entrypoint: ["/ziti-router/enroll.sh"]
+    environment:
+      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}                 
+      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}                         
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-plc1}  
+      ZITI_ROUTER_PORT: ${ZITI_ROUTER_PORT:-3022}                                     
+      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-host}              
+      ZITI_BOOTSTRAP: true             
+      ZITI_BOOTSTRAP_CONFIG: true     
+      ZITI_BOOTSTRAP_ENROLLMENT: true  
+      ZITI_AUTO_RENEW_CERTS: true    
+      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
+      ZITI_BOOTSTRAP_CONFIG_ARGS:      
+    command: run config.yml
+    ports:
+      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_PLC1_HOST:-3022}:${ZITI_ROUTER_PORT:-3022}
+    expose:
+      - ${ZITI_ROUTER_PORT_PLC1_HOST:-3022}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - ziti
+        - agent
+        - stats
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    networks:
+      - ziti
+
+  ziti-tunneler-plc2:
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router}
+    container_name: ziti-tunneler-plc2
+    depends_on:
+      ziti-tunneler-plc-init2:
+        condition: service_completed_successfully
+    user: ${ZIGGY_UID:-2171}
+    volumes:
+      - ziti-host2:/ziti-router
+      - ./ziti/enroll.sh:/ziti-router/enroll.sh
+    entrypoint: ["/ziti-router/enroll.sh"]
+    environment:
+      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}                 
+      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}                         
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-plc2}  
+      ZITI_ROUTER_PORT: ${ZITI_ROUTER_PORT:-3022}                                     
+      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-host}              
+      ZITI_BOOTSTRAP: true             
+      ZITI_BOOTSTRAP_CONFIG: true     
+      ZITI_BOOTSTRAP_ENROLLMENT: true  
+      ZITI_AUTO_RENEW_CERTS: true    
+      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
+      ZITI_BOOTSTRAP_CONFIG_ARGS:      
+    command: run config.yml
+    ports:
+      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_PLC2_HOST:-3022}:${ZITI_ROUTER_PORT:-3022}
+    expose:
+      - ${ZITI_ROUTER_PORT_PLC2_HOST:-3022}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - ziti
+        - agent
+        - stats
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    networks:
+      - ziti
+
+  ziti-tunneler-plc3:
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router}
+    container_name: ziti-tunneler-plc3
+    depends_on:
+      ziti-tunneler-plc-init3:
+        condition: service_completed_successfully
+    user: ${ZIGGY_UID:-2171}
+    volumes:
+      - ziti-host3:/ziti-router
+      - ./ziti/enroll.sh:/ziti-router/enroll.sh
+    entrypoint: ["/ziti-router/enroll.sh"]
+    environment:
+      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}                 
+      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}                         
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-plc3}  
+      ZITI_ROUTER_PORT: ${ZITI_ROUTER_PORT:-3022}                                     
+      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-host}              
+      ZITI_BOOTSTRAP: true             
+      ZITI_BOOTSTRAP_CONFIG: true     
+      ZITI_BOOTSTRAP_ENROLLMENT: true  
+      ZITI_AUTO_RENEW_CERTS: true    
+      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
+      ZITI_BOOTSTRAP_CONFIG_ARGS:      
+    command: run config.yml
+    ports:
+      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_PLC3_HOST:-3022}:${ZITI_ROUTER_PORT:-3022}
+    expose:
+      - ${ZITI_ROUTER_PORT_PLC3_HOST:-3022}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - ziti
+        - agent
+        - stats
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    networks:
+      - ziti
+
+  ziti-tunneler-plc4:
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router}
+    container_name: ziti-tunneler-plc4
+    depends_on:
+      ziti-tunneler-plc-init4:
+        condition: service_completed_successfully
+    user: ${ZIGGY_UID:-2171}
+    volumes:
+      - ziti-host4:/ziti-router
+      - ./ziti/enroll.sh:/ziti-router/enroll.sh
+    entrypoint: ["/ziti-router/enroll.sh"]
+    environment:
+      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}                 
+      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}                         
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-plc4}  
+      ZITI_ROUTER_PORT: ${ZITI_ROUTER_PORT:-3022}                                     
+      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-host}              
+      ZITI_BOOTSTRAP: true             
+      ZITI_BOOTSTRAP_CONFIG: true     
+      ZITI_BOOTSTRAP_ENROLLMENT: true  
+      ZITI_AUTO_RENEW_CERTS: true    
+      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
+      ZITI_BOOTSTRAP_CONFIG_ARGS:    
+    command: run config.yml
+    ports:
+      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_PLC4_HOST:-3022}:${ZITI_ROUTER_PORT:-3022}
+    expose:
+      - ${ZITI_ROUTER_PORT_PLC4_HOST:-3022}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - ziti
+        - agent
+        - stats
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    networks:
+      - ziti
+
+
+# PLC TUNNELER INIT
+
+  ziti-tunneler-plc-init1:
+    container_name: ziti-tunneler-plc-init1
+    image: "openziti/ziti-cli:latest"
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}  
+      - PLC=1
+    entrypoint: ["/bin/sh", "/bootstrap.sh"]
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    volumes:
+      - ziti-host1:/ziti-router
+      - ./ziti/bootstrap_tunneler_plc.sh:/bootstrap.sh
+    networks:
+      - ziti
+
+  ziti-tunneler-plc-init2:
+    container_name: ziti-tunneler-plc-init2
+    image: "openziti/ziti-cli:latest"
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}  
+      - PLC=2
+    entrypoint: ["/bin/sh", "/bootstrap.sh"]
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    volumes:
+      - ziti-host2:/ziti-router
+      - ./ziti/bootstrap_tunneler_plc.sh:/bootstrap.sh
+    networks:
+      - ziti
+
+  ziti-tunneler-plc-init3:
+    container_name: ziti-tunneler-plc-init3
+    image: "openziti/ziti-cli:latest"
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}  
+      - PLC=3
+    entrypoint: ["/bin/sh", "/bootstrap.sh"]
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    volumes:
+      - ziti-host3:/ziti-router
+      - ./ziti/bootstrap_tunneler_plc.sh:/bootstrap.sh
+    networks:
+      - ziti
+
+  ziti-tunneler-plc-init4:
+    container_name: ziti-tunneler-plc-init4
+    image: "openziti/ziti-cli:latest"
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}  
+      - PLC=4
+    entrypoint: ["/bin/sh", "/bootstrap.sh"]
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    volumes:
+      - ziti-host4:/ziti-router
+      - ./ziti/bootstrap_tunneler_plc.sh:/bootstrap.sh
+    networks:
+      - ziti
+
+
+# HIL TUNNELER
+
+  ziti-tunneler-hil1:
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router}
+    container_name: ziti-tunneler-hil1
+    depends_on:
+      ziti-tunneler-hil-init1:
+        condition: service_completed_successfully
+    volumes:
+      - ziti-client1:/ziti-router
+      - ./ziti/enroll.sh:/ziti-router/enroll.sh
+    entrypoint: ["/ziti-router/enroll.sh"]
+    environment:
+      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}                 
+      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}                                          
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-hil1}  
+      ZITI_ROUTER_PORT: ${ZITI_ROUTER_PORT:-3022}                                     
+      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-tproxy}     
+      ZITI_AUTO_RENEW_CERTS: true      
+      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
+    command: run config.yml
+    ports:
+      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_HIL1_HOST:-3023}:${ZITI_ROUTER_PORT:-3022}
+    expose:
+      - ${ZITI_ROUTER_PORT_HIL1_HOST:-3023}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - ziti
+        - agent
+        - stats
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    dns:
+      - 127.0.0.1  
+      - 1.1.1.1   
+    user: root     
+    cap_add:
+      - NET_ADMIN 
+    networks:
+      - ziti
+
+  ziti-tunneler-hil2:
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router}
+    container_name: ziti-tunneler-hil2
+    depends_on:
+      ziti-tunneler-hil-init2:
+        condition: service_completed_successfully
+    volumes:
+      - ziti-client2:/ziti-router
+      - ./ziti/enroll.sh:/ziti-router/enroll.sh
+    entrypoint: ["/ziti-router/enroll.sh"]
+    environment:
+      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}                 
+      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}                                          
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-hil2}  
+      ZITI_ROUTER_PORT: ${ZITI_ROUTER_PORT:-3022}                                     
+      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-tproxy}     
+      ZITI_AUTO_RENEW_CERTS: true      
+      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
+    command: run config.yml
+    ports:
+      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_HIL2_HOST:-3023}:${ZITI_ROUTER_PORT:-3022}
+    expose:
+      - ${ZITI_ROUTER_PORT_HIL2_HOST:-3023}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - ziti
+        - agent
+        - stats
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    dns:
+      - 127.0.0.1  
+      - 1.1.1.1   
+    user: root     
+    cap_add:
+      - NET_ADMIN 
+    networks:
+      - ziti
+
+  ziti-tunneler-hil3:
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router}
+    container_name: ziti-tunneler-hil3
+    depends_on:
+      ziti-tunneler-hil-init3:
+        condition: service_completed_successfully
+    volumes:
+      - ziti-client3:/ziti-router
+      - ./ziti/enroll.sh:/ziti-router/enroll.sh
+    entrypoint: ["/ziti-router/enroll.sh"]
+    environment:
+      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}                 
+      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}                                          
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-hil3}  
+      ZITI_ROUTER_PORT: ${ZITI_ROUTER_PORT:-3022}                                     
+      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-tproxy}     
+      ZITI_AUTO_RENEW_CERTS: true      
+      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
+    command: run config.yml
+    ports:
+      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_HIL3_HOST:-3023}:${ZITI_ROUTER_PORT:-3022}
+    expose:
+      - ${ZITI_ROUTER_PORT_HIL3_HOST:-3023}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - ziti
+        - agent
+        - stats
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    dns:
+      - 127.0.0.1  
+      - 1.1.1.1   
+    user: root     
+    cap_add:
+      - NET_ADMIN 
+    networks:
+      - ziti
+
+  ziti-tunneler-hil4:
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router}
+    container_name: ziti-tunneler-hil4
+    depends_on:
+      ziti-tunneler-hil-init4:
+        condition: service_completed_successfully
+    volumes:
+      - ziti-client4:/ziti-router
+      - ./ziti/enroll.sh:/ziti-router/enroll.sh
+    entrypoint: ["/ziti-router/enroll.sh"]
+    environment:
+      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}                 
+      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}                                          
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-hil4}  
+      ZITI_ROUTER_PORT: ${ZITI_ROUTER_PORT:-3022}                                     
+      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-tproxy}     
+      ZITI_AUTO_RENEW_CERTS: true      
+      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
+    command: run config.yml
+    ports:
+      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_HIL4_HOST:-3023}:${ZITI_ROUTER_PORT:-3022}
+    expose:
+      - ${ZITI_ROUTER_PORT_HIL4_HOST:-3023}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - ziti
+        - agent
+        - stats
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    dns:
+      - 127.0.0.1  
+      - 1.1.1.1   
+    user: root     
+    cap_add:
+      - NET_ADMIN 
+    networks:
+      - ziti
+
+
+# HIL TUNNELER INIT
+
+  ziti-tunneler-hil-init1:
+    container_name: ziti-tunneler-hil-init1
+    image: "openziti/ziti-cli:latest"
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}  
+      - PLC=1
+    entrypoint: ["/bin/sh", "/bootstrap.sh"]
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    volumes:
+      - ziti-client1:/ziti-router
+      - ./ziti/bootstrap_tunneler_client.sh:/bootstrap.sh
+    networks:
+      - ziti
+
+  ziti-tunneler-hil-init2:
+    container_name: ziti-tunneler-hil-init2
+    image: "openziti/ziti-cli:latest"
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}  
+      - PLC=2
+    entrypoint: ["/bin/sh", "/bootstrap.sh"]
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    volumes:
+      - ziti-client2:/ziti-router
+      - ./ziti/bootstrap_tunneler_client.sh:/bootstrap.sh
+    networks:
+      - ziti
+
+  ziti-tunneler-hil-init3:
+    container_name: ziti-tunneler-hil-init3
+    image: "openziti/ziti-cli:latest"
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}  
+      - PLC=3
+    entrypoint: ["/bin/sh", "/bootstrap.sh"]
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    volumes:
+      - ziti-client3:/ziti-router
+      - ./ziti/bootstrap_tunneler_client.sh:/bootstrap.sh
+    networks:
+      - ziti
+
+  ziti-tunneler-hil-init4:
+    container_name: ziti-tunneler-hil-init4
+    image: "openziti/ziti-cli:latest"
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}  
+      - PLC=4
+    entrypoint: ["/bin/sh", "/bootstrap.sh"]
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    volumes:
+      - ziti-client4:/ziti-router
+      - ./ziti/bootstrap_tunneler_client.sh:/bootstrap.sh
+    networks:
+      - ziti
+
+
+# SCADA
+
+  ziti-tunneler-scada:
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router}
+    container_name: ziti-tunneler-scada
+    depends_on:
+      ziti-tunneler-scada-init:
+        condition: service_completed_successfully
+    volumes:
+      - ziti-scada:/ziti-router
+      - ./ziti/enroll.sh:/ziti-router/enroll.sh
+    entrypoint: ["/ziti-router/enroll.sh"]
+    environment:
+      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}                 
+      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}                                          
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-hil4}  
+      ZITI_ROUTER_PORT: ${ZITI_ROUTER_PORT:-3022}                                     
+      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-tproxy}     
+      ZITI_AUTO_RENEW_CERTS: true      
+      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
+    command: run config.yml
+    ports:
+      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_SCADA_HOST:-3023}:${ZITI_ROUTER_PORT:-3022}
+      - 8080:8080
+    expose:
+      - ${ZITI_ROUTER_PORT_SCADA_HOST:-3023}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - ziti
+        - agent
+        - stats
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    dns:
+      - 127.0.0.1  
+      - 1.1.1.1   
+    user: root     
+    cap_add:
+      - NET_ADMIN 
+    networks:
+      - ziti
+
+  ziti-tunneler-scada-init:
+    container_name: ziti-tunneler-scada-init
+    image: "openziti/ziti-cli:latest"
+    user: root
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}  
+      - PLC=-scada
+    entrypoint: ["/bin/sh", "/bootstrap.sh"]
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    volumes:
+      - ziti-scada:/ziti-router
+      - ./ziti/bootstrap_tunneler_scada.sh:/bootstrap.sh
+    networks:
+      - ziti
+    ports:
+      - "8080:8080"
+
+volumes:
+    ziti-ctrl:
+    ziti-host1:
+    ziti-host2:
+    ziti-host3:
+    ziti-host4:
+    ziti-client1:
+    ziti-client2:
+    ziti-client3:
+    ziti-client4:
+    ziti-scada:

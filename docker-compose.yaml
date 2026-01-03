@@ -2,7 +2,6 @@ services:
 
 #PLC
   plc1:
-    image: plc
     pull_policy: never
     container_name: plc1
     build:
@@ -22,7 +21,6 @@ services:
     network_mode: service:ziti-tunneler-plc1
 
   plc2:
-    image: plc
     pull_policy: never
     container_name: plc2
     build:
@@ -42,7 +40,6 @@ services:
     network_mode: service:ziti-tunneler-plc2
 
   plc3:
-    image: plc
     pull_policy: never
     container_name: plc3
     build:
@@ -62,7 +59,6 @@ services:
     network_mode: service:ziti-tunneler-plc3
 
   plc4:
-    image: plc
     pull_policy: never
     container_name: plc4
     build:
@@ -83,7 +79,6 @@ services:
       
 # HIL
   hil1:
-    image: hil
     pull_policy: never
     container_name: hil1
     build:
@@ -99,7 +94,6 @@ services:
     network_mode: service:ziti-tunneler-hil1
 
   hil2:
-    image: hil
     pull_policy: never
     container_name: hil2
     build:
@@ -115,7 +109,6 @@ services:
     network_mode: service:ziti-tunneler-hil2
 
   hil3:
-    image: hil
     pull_policy: never
     container_name: hil3
     build:
@@ -131,7 +124,6 @@ services:
     network_mode: service:ziti-tunneler-hil3
 
   hil4:
-    image: hil
     pull_policy: never
     container_name: hil4
     build:
@@ -148,7 +140,6 @@ services:
 
 # SCADA
   scada:
-    image: scada
     pull_policy: never
     container_name: scada
     build:

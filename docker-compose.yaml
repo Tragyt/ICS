@@ -2,7 +2,6 @@ services:
 
 #PLC
   plc1:
-    image: plc
     pull_policy: never
     container_name: plc1
     build:
@@ -23,7 +22,6 @@ services:
       - 8081:8080
 
   plc2:
-    image: plc
     pull_policy: never
     container_name: plc2
     build:
@@ -44,7 +42,6 @@ services:
       - 8082:8080
 
   plc3:
-    image: plc
     pull_policy: never
     container_name: plc3
     build:
@@ -65,7 +62,6 @@ services:
       - 8083:8080
 
   plc4:
-    image: plc
     pull_policy: never
     container_name: plc4
     build:
@@ -87,7 +83,6 @@ services:
       
 # HIL
   hil1:
-    image: hil
     pull_policy: never
     container_name: hil1
     build:
@@ -103,7 +98,6 @@ services:
         condition: service_healthy
 
   hil2:
-    image: hil
     pull_policy: never
     container_name: hil2
     build:
@@ -119,7 +113,6 @@ services:
         condition: service_healthy
 
   hil3:
-    image: hil
     pull_policy: never
     container_name: hil3
     build:
@@ -135,7 +128,6 @@ services:
         condition: service_healthy
 
   hil4:
-    image: hil
     pull_policy: never
     container_name: hil4
     build:
@@ -152,7 +144,6 @@ services:
 
 # SCADA
   scada:
-    image: scada
     pull_policy: never
     container_name: scada
     build:

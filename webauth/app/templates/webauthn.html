@@ -1,0 +1,67 @@
+<script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
+<script>
+    const { startRegistration, startAuthentication } = SimpleWebAuthnBrowser;
+
+    function delete_user(user_id) {
+        const url = "{{ url_for('apis.delete_user', id='USER_ID_REPLACE') }}".replace('USER_ID_REPLACE', user_id);
+        fetch(url, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+    const REGISTER_USER_URL = "{{ url_for('apis.register_user') }}";
+    const VERIFY_SAVE_CREDENTIAL_URL ="{{ url_for('apis.verify_save_credentials') }}"
+    const INDEX_URL = "{{ url_for('index') }}";
+    async function register_user(name, username) {
+        const userData = {
+            name: name,
+            username: username
+        };
+
+        user_id = 0;
+        try {
+            const response = await fetch(REGISTER_USER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userData)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                user_id = result.user_id;
+                jsonOptions = JSON.parse(result.publicCredentialCreationOptions);
+
+                let webauthn_response;
+                webauthn_response = await SimpleWebAuthnBrowser.startRegistration(jsonOptions);
+                
+                const verifyResponse = await fetch(VERIFY_SAVE_CREDENTIAL_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        credential: webauthn_response,
+                        challenge: Uint8Array.from(jsonOptions.challenge, c => c.charCodeAt(0)),
+                        user_id: user_id
+                    })
+                });
+                const verifyJson = await verifyResponse.json();
+                if (verifyJson.status == 'ok')
+                    alert("Registrazione completata con successo!");
+                else {
+                    delete_user(user_id);
+                    return false;
+                }
+
+                window.location.href = INDEX_URL;
+            } else {
+                delete_user(user_id);
+                return false;
+            }
+        } catch (error) {
+            console.error(error);
+            delete_user(user_id);
+            return false;
+        }
+        return true;
+    }
+</script>

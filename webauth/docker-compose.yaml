@@ -1,0 +1,162 @@
+services:
+
+  # User Handler
+  user_handler:
+    container_name: user_handler
+    build:
+      context: .
+      dockerfile: webauth/Dockerfile
+    environment:
+      DATABASE_URL: "postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@ziti.db:5432/app"
+      SECRET_KEY: ${SECRET_KEY}
+      ADMIN_INIT_TOKEN: ${ADMIN_INIT_TOKEN}
+    volumes:
+      - ./webauth/app:/app
+    depends_on:
+      # db_user_handler:
+      ziti-tunneler-userhandler:
+        condition: service_healthy
+    network_mode: service:ziti-tunneler-userhandler
+
+  ziti-tunneler-userhandler:
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router}
+    container_name: ziti-tunneler-userhandler
+    depends_on:
+      ziti-tunneler-userhandler-init:
+        condition: service_completed_successfully
+    volumes:
+      - ziti-userhandler:/ziti-router
+      - ./ziti/enroll.sh:/ziti-router/enroll.sh
+    entrypoint: [ "/ziti-router/enroll.sh" ]
+    environment:
+      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}
+      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-userhandler}
+      ZITI_ROUTER_PORT: ${ZITI_ROUTER_PORT:-3022}
+      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-tproxy}
+      ZITI_AUTO_RENEW_CERTS: true
+      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}
+    command: run config.yml
+    ports:
+      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_USERHANDLER_HOST:-3023}:${ZITI_ROUTER_PORT:-3022}
+      - 5000:5000
+    expose:
+      - ${ZITI_ROUTER_PORT_SCADA_HOST:-3023}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - ziti
+        - agent
+        - stats
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+    user: root
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - ziti
+
+  ziti-tunneler-userhandler-init:
+    container_name: ziti-tunneler-userhandler-init
+    image: "openziti/ziti-cli:latest"
+    user: root
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}
+      - PLC=-userhandler
+    entrypoint: [ "/bin/sh", "/bootstrap.sh" ]
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    volumes:
+      - ziti-userhandler:/ziti-router
+      - ./webauth/bootstrap_tunneler_userhandler.sh:/bootstrap.sh
+    networks:
+      - ziti
+
+  # Database for User Handler
+  db_user_handler:
+    container_name: db_user_handler
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: 'app'
+    volumes:
+      - db_user_handler:/var/lib/postgresql
+    depends_on:
+      ziti-tunneler-db:
+        condition: service_healthy
+    network_mode: service:ziti-tunneler-db
+
+  ziti-tunneler-db:
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router}
+    container_name: ziti-tunneler-db
+    depends_on:
+      ziti-tunneler-db-init:
+        condition: service_completed_successfully
+    user: ${ZIGGY_UID:-2171}
+    volumes:
+      - ziti-db:/ziti-router
+      - ./ziti/enroll.sh:/ziti-router/enroll.sh
+    entrypoint: [ "/ziti-router/enroll.sh" ]
+    environment:
+      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}
+      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-db}
+      ZITI_ROUTER_PORT: ${ZITI_ROUTER_PORT:-3022}
+      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-host}
+      ZITI_BOOTSTRAP: true
+      ZITI_BOOTSTRAP_CONFIG: true
+      ZITI_BOOTSTRAP_ENROLLMENT: true
+      ZITI_AUTO_RENEW_CERTS: true
+      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}
+      ZITI_BOOTSTRAP_CONFIG_ARGS:
+    command: run config.yml
+    ports:
+      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_DB_HOST:-3022}:${ZITI_ROUTER_PORT:-3022}
+    expose:
+      - ${ZITI_ROUTER_PORT_DB_HOST:-3022}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - ziti
+        - agent
+        - stats
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    networks:
+      - ziti
+
+  ziti-tunneler-db-init:
+    container_name: ziti-tunneler-db-init
+    image: "openziti/ziti-cli:latest"
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}
+      - PLC=db
+    entrypoint: [ "/bin/sh", "/bootstrap.sh" ]
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    volumes:
+      - ziti-db:/ziti-router
+      - ./webauth/bootstrap_tunneler_db.sh:/bootstrap.sh
+    networks:
+      - ziti
+
+volumes:
+  db_user_handler:
+  ziti-userhandler:
+  ziti-db:

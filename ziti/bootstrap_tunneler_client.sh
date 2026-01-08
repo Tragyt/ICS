@@ -1,6 +1,5 @@
 #!/bin/sh
 
-echo "{\"protocols\":[\"tcp\"],\"addresses\":[\"ziti.plc${PLC}\"], \"portRanges\":[{\"low\":502, \"high\":502}]}"
 ziti edge login https://ziti-edge-controller:${ZITI_CTRL_EDGE_ADVERTISED_PORT} \
     --username=${ZITI_USER} \
     --password=${ZITI_PWD} \

@@ -12,7 +12,9 @@
 
 <body>
   <header class="w-full bg-gray-50 font-bold px-8 py-2 flex justify-between shadow items-center">
+    {% if userhandler %}
     <a href="{{ url_for('index') }}" class="font-bold text-2xl">Users Handler</a>
+    {% endif %}
 
     {% if current_user.is_authenticated %}
     <a href="{{ url_for('logout') }}"

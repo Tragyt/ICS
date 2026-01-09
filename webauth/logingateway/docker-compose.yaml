@@ -1,0 +1,14 @@
+services:
+  logingateway:
+    container_name: logingateway
+    build:
+      context: .
+      dockerfile: webauth/logingateway/Dockerfile
+    environment:
+      DATABASE_URL: "postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@ziti.db:5432/app"
+      SECRET_KEY: ${SECRET_KEY_GATEWAY}
+      PYTHONPATH: /app/logingateway
+    depends_on:
+      ziti-tunneler-logingateway:
+        condition: service_healthy
+    network_mode: service:ziti-tunneler-logingateway

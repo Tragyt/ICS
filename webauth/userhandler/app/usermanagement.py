@@ -1,21 +1,17 @@
 import os
 import secrets
 
-from flask import Blueprint, request, jsonify, session
-from flask_login import login_user, login_required
+from common.models import UserRole as Role, User, db
+from common.userlogin import _hostname
+
 from sqlalchemy.exc import IntegrityError
-from urllib.parse import urlparse
-import webauthn
-from models import db, User, UserRole as Role
+from flask import Blueprint, session, request, jsonify
 from webauthn.helpers.structs import AuthenticatorSelectionCriteria, ResidentKeyRequirement, UserVerificationRequirement
-from webauthn.helpers import base64url_to_bytes
+from flask_login import login_required
 
-apis = Blueprint('apis', __name__)
+import webauthn
 
-
-def _hostname():
-    return str(urlparse(request.host_url).hostname)
-
+usermanagement = Blueprint('usermanagement', __name__)
 
 def _register_user(username, name, role=Role.USER.value):
     user = User(username=username, name=name,
@@ -62,8 +58,7 @@ def _verify_save_credentials(user_id, credential):
     db.session.commit()
     return {'status': 'ok'}, 200
 
-
-@apis.route('/setup-user', methods=['POST'])
+@usermanagement.route('/setup-user', methods=['POST'])
 def setup_user():
     if session.get("setup") != True:
         return {'status': 'error', 'message': 'Setup già completato'}, 403
@@ -84,7 +79,7 @@ def setup_user():
     })
 
 
-@apis.route('/verify-setup-user', methods=['POST'])
+@usermanagement.route('/verify-setup-user', methods=['POST'])
 def verify_setup_user():
     if session.pop("setup", None) != True:
         return {'status': 'error', 'message': 'Setup già completato'}, 403
@@ -97,7 +92,7 @@ def verify_setup_user():
     return _verify_save_credentials(user_id, data.get('credential'))
 
 
-@apis.route('/register-user', methods=['POST'])
+@usermanagement.route('/register-user', methods=['POST'])
 @login_required
 def register_user():
     data = request.get_json()
@@ -111,7 +106,7 @@ def register_user():
     })
 
 
-@apis.route('/verify-save-credentials', methods=['POST'])
+@usermanagement.route('/verify-save-credentials', methods=['POST'])
 @login_required
 def verify_save_credentials():
     data = request.json
@@ -119,7 +114,7 @@ def verify_save_credentials():
     return _verify_save_credentials(user_id, data.get('credential'))
 
 
-@apis.route('/delete-user/<id>', methods=['DELETE'])
+@usermanagement.route('/delete-user/<id>', methods=['DELETE'])
 @login_required
 def delete_user(id):
     user = User.query.get(id)
@@ -128,49 +123,3 @@ def delete_user(id):
     db.session.delete(user)
     db.session.commit()
     return {'status': 'ok'}, 200
-
-
-@apis.route('/autentication-options', methods=['POST'])
-def authenticate():
-    username = request.json.get('username')
-    user = User.query.filter(User.username == username).first()
-    if not user:
-        return jsonify({'error': "utente non trovato"}), 500
-    options = webauthn.generate_authentication_options(rp_id=_hostname(),
-                                                       user_verification=UserVerificationRequirement.PREFERRED)
-    session[f"challenge_{user.id}"] = options.challenge
-    jsonOptions = webauthn.options_to_json(options)
-    return jsonify(jsonOptions)
-
-
-@apis.route('/login-verify', methods=['POST'])
-def login_verify():
-    try:
-        data = request.json
-
-        credential = data.get('credential')
-        if not credential:
-            return jsonify({'error': "credential non presente"}), 500
-
-        username = data.get('username')
-        user = User.query.filter(User.username == username).first()
-        if not user:
-            return jsonify({'error': "utente non trovato"}), 500
-
-        challenge = session.get(f"challenge_{user.id}")
-        if not challenge:
-            return jsonify({'error': "challenge non presente"}), 500
-        result = webauthn.verify_authentication_response(
-            credential=credential,
-            expected_origin=f"{request.scheme}://{request.host}",
-            expected_rp_id=_hostname(),
-            expected_challenge=session.get(f"challenge_{user.id}"),
-            credential_current_sign_count=user.current_sign_count,
-            credential_public_key=user.credential_public_key,
-            require_user_verification=True
-        )
-
-        login_user(user)
-        return jsonify({'success': True}), 200
-    except Exception as e:
-        return jsonify({'error': f'Errore durante la verifica delle credenziali.'}), 500

@@ -3,15 +3,15 @@
     const { startRegistration, startAuthentication } = SimpleWebAuthnBrowser;
 
     function delete_user(user_id) {
-        const url = "{{ url_for('apis.delete_user', id='USER_ID_REPLACE') }}".replace('USER_ID_REPLACE', user_id);
+        const url = "{{ url_for('usermanagement.delete_user', id='USER_ID_REPLACE') }}".replace('USER_ID_REPLACE', user_id);
         fetch(url, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' }
         });
     }
 
-    const REGISTER_USER_URL = "{{ url_for('apis.register_user') }}";
-    const VERIFY_SAVE_CREDENTIAL_URL ="{{ url_for('apis.verify_save_credentials') }}"
+    const REGISTER_USER_URL = "{{ url_for('usermanagement.register_user') }}";
+    const VERIFY_SAVE_CREDENTIAL_URL ="{{ url_for('usermanagement.verify_save_credentials') }}"
     const INDEX_URL = "{{ url_for('index') }}";
     async function register_user(name, username) {
         const userData = {

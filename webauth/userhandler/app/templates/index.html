@@ -49,7 +49,7 @@
             if (!confirm("Sei sicuro di voler eliminare questo utente?")) return;
 
             try {
-                const response = await fetch(`/api/delete-user/${userId}`, {
+                const response = await fetch(`/usermanagement/delete-user/${userId}`, {
                     method: 'DELETE'
                 });
                 if (response.ok)

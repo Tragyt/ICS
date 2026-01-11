@@ -13,10 +13,11 @@ if [ ! -f /ziti-router/enroll.jwt ]; then
 
     ziti edge update identity "plc-router${PLC}" \
         --role-attributes plc${PLC}
+
     ziti edge create config "plc-config${PLC}" host.v1 \
         '{"protocol":"tcp", "address":"127.0.0.1","port":502}'
     ziti edge create config "hil-config${PLC}" intercept.v1 \
-        "{\"protocols\":[\"tcp\"],\"addresses\":[\"ziti.plc${PLC}\"], \"portRanges\":[{\"low\":502, \"high\":502}]}"    
+        "{\"protocols\":[\"tcp\"],\"addresses\":[\"ziti.plc${PLC}\"], \"portRanges\":[{\"low\":502, \"high\":502}]}"
         
     ziti edge create service "plc-service${PLC}" \
         --configs hil-config${PLC},plc-config${PLC} \
@@ -28,6 +29,23 @@ if [ ! -f /ziti-router/enroll.jwt ]; then
     ziti edge create service-policy "scada-policy${PLC}" Dial \
         --service-roles "#plc-services${PLC}" \
         --identity-roles "#scada"
+
+
+    ziti edge create config "plc-webserver-config${PLC}" host.v1 \
+        '{"protocol":"tcp", "address":"127.0.0.1","port":8080}'
+    ziti edge create config "webserver-client-config${PLC}" intercept.v1 \
+        "{\"protocols\":[\"tcp\"],\"addresses\":[\"ziti.plc${PLC}.webserver\"], \"portRanges\":[{\"low\":8080, \"high\":8080}]}"
+
+    ziti edge create service "plc-webserver-service${PLC}" \
+        --configs plc-webserver-config${PLC},webserver-client-config${PLC} \
+        --role-attributes plc-webserver-services${PLC}
+
+    ziti edge create service-policy "plc-webserver-policy${PLC}" Bind \
+        --service-roles "plc-webserver-services${PLC}" \
+        --identity-roles "#plc${PLC}"
+    ziti edge create service-policy "webserver-client-policy${PLC}" Dial \
+        --service-roles "plc-webserver-services${PLC}" \
+        --identity-roles "#logingateway"
 fi
 
 chown -R ${ZIGGY_UID:-2171} /ziti-router

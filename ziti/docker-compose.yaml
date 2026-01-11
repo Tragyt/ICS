@@ -79,7 +79,7 @@ services:
       ZITI_BOOTSTRAP_CONFIG_ARGS:      
     command: run config.yml
     ports:
-      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_PLC1_HOST:-3022}:${ZITI_ROUTER_PORT:-3022}
+      - 8081:8080
     expose:
       - ${ZITI_ROUTER_PORT_PLC1_HOST:-3022}
     restart: unless-stopped
@@ -121,7 +121,7 @@ services:
       ZITI_BOOTSTRAP_CONFIG_ARGS:      
     command: run config.yml
     ports:
-      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_PLC2_HOST:-3022}:${ZITI_ROUTER_PORT:-3022}
+      - 8082:8080
     expose:
       - ${ZITI_ROUTER_PORT_PLC2_HOST:-3022}
     restart: unless-stopped
@@ -163,7 +163,7 @@ services:
       ZITI_BOOTSTRAP_CONFIG_ARGS:      
     command: run config.yml
     ports:
-      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_PLC3_HOST:-3022}:${ZITI_ROUTER_PORT:-3022}
+      - 8083:8080
     expose:
       - ${ZITI_ROUTER_PORT_PLC3_HOST:-3022}
     restart: unless-stopped
@@ -205,7 +205,7 @@ services:
       ZITI_BOOTSTRAP_CONFIG_ARGS:    
     command: run config.yml
     ports:
-      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_PLC4_HOST:-3022}:${ZITI_ROUTER_PORT:-3022}
+      - 8084:8080
     expose:
       - ${ZITI_ROUTER_PORT_PLC4_HOST:-3022}
     restart: unless-stopped
@@ -319,10 +319,6 @@ services:
       ZITI_AUTO_RENEW_CERTS: true      
       ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
     command: run config.yml
-    ports:
-      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_HIL1_HOST:-3023}:${ZITI_ROUTER_PORT:-3022}
-    expose:
-      - ${ZITI_ROUTER_PORT_HIL1_HOST:-3023}
     restart: unless-stopped
     healthcheck:
       test:
@@ -362,10 +358,6 @@ services:
       ZITI_AUTO_RENEW_CERTS: true      
       ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
     command: run config.yml
-    ports:
-      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_HIL2_HOST:-3023}:${ZITI_ROUTER_PORT:-3022}
-    expose:
-      - ${ZITI_ROUTER_PORT_HIL2_HOST:-3023}
     restart: unless-stopped
     healthcheck:
       test:
@@ -405,10 +397,6 @@ services:
       ZITI_AUTO_RENEW_CERTS: true      
       ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
     command: run config.yml
-    ports:
-      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_HIL3_HOST:-3023}:${ZITI_ROUTER_PORT:-3022}
-    expose:
-      - ${ZITI_ROUTER_PORT_HIL3_HOST:-3023}
     restart: unless-stopped
     healthcheck:
       test:
@@ -448,10 +436,6 @@ services:
       ZITI_AUTO_RENEW_CERTS: true      
       ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
     command: run config.yml
-    ports:
-      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_HIL4_HOST:-3023}:${ZITI_ROUTER_PORT:-3022}
-    expose:
-      - ${ZITI_ROUTER_PORT_HIL4_HOST:-3023}
     restart: unless-stopped
     healthcheck:
       test:
@@ -570,10 +554,7 @@ services:
       ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
     command: run config.yml
     ports:
-      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_SCADA_HOST:-3023}:${ZITI_ROUTER_PORT:-3022}
       - 8080:8080
-    expose:
-      - ${ZITI_ROUTER_PORT_SCADA_HOST:-3023}
     restart: unless-stopped
     healthcheck:
       test:

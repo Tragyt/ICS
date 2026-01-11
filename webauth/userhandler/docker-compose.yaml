@@ -38,10 +38,7 @@ services:
       ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}
     command: run config.yml
     ports:
-      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_USERHANDLER_HOST:-3023}:${ZITI_ROUTER_PORT:-3022}
       - 5000:5000
-    expose:
-      - ${ZITI_ROUTER_PORT_SCADA_HOST:-3023}
     restart: unless-stopped
     healthcheck:
       test:

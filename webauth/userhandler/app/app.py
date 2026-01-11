@@ -33,7 +33,7 @@ def load_user(user_id):
 def login():
     if not User.query.filter_by(role=Role.ADMIN.value).first():
         session["setup"] = True
-        return render_template('login.html', setup=True)
+        return render_template('login.html', setup=True, userhandler=True)
     session.pop("setup", None)
     return render_template('login.html', setup=False, userhandler=True)
 

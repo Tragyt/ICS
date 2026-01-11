@@ -109,7 +109,7 @@
                 });
                 const authenticationResult = await authenticationResponse.json();
                 if (authenticationResult.success)
-                    window.location.href = "{{ url_for('index') }}";
+                    window.location.href = "/index";
                 else {
                     errorDiv.textContent = 'Autenticazione fallita';
                     errorDiv.classList.remove('hidden');

@@ -1,8 +1,9 @@
 import os
-import requests
 
-from flask import Flask, render_template, request, Response
-from flask_login import LoginManager, login_required
+from urllib.parse import urljoin, urlparse, parse_qs, urlencode, urlunparse
+
+from flask import Flask, render_template, request, Response, abort
+from flask_login import LoginManager, login_required, current_user
 
 from common.models import User, db
 from common.userlogin import userlogin
@@ -19,6 +20,7 @@ app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_SAMESITE="Strict",
 )
+app.config["SESSION_COOKIE_NAME"] = "auth_session"
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -32,32 +34,15 @@ def load_user(user_id):
     return User.query.get(user_id)
 
 
-@app.route('/login', methods=['GET'])
+@app.route('/login_', methods=['GET'])
 def login():
-    return render_template('login.html', setup=False, userhandler=False)
+    next_url = request.args.get('next')
+    return render_template('login.html', setup=False, userhandler=False, next=next_url)
 
 
-@app.route('/<path>', methods=['GET', 'POST', 'DELETE'])
-@login_required
-def proxy(path):
-    url = f'http://{path}'
-    if request.method == 'GET':
-        resp = requests.get(url)
-        excluded_headers = ['content-encoding',
-                            'content-length', 'transfer-encoding', 'connection']
-        headers = [(name, value) for (name, value) in resp.raw.headers.items(
-        ) if name.lower() not in excluded_headers]
-        response = Response(resp.content, resp.status_code, headers)
-        return response
-    elif request.method == 'POST':
-        resp = requests.post(url, json=request.get_json())
-        excluded_headers = ['content-encoding',
-                            'content-length', 'transfer-encoding', 'connection']
-        headers = [(name, value) for (name, value) in resp.raw.headers.items(
-        ) if name.lower() not in excluded_headers]
-        response = Response(resp.content, resp.status_code, headers)
-        return response
-    elif request.method == 'DELETE':
-        resp = requests.delete(url).content
-        response = Response(resp.content, resp.status_code, headers)
-        return response
+@app.route('/auth')
+def auth_check():
+    if current_user.is_authenticated:
+        resp = app.make_response(("", 200))
+        return resp
+    return ("", 401)

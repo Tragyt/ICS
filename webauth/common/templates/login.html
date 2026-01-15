@@ -35,8 +35,8 @@
 
         const username = e.target.username.value;
         const errorDiv = document.getElementById('errorMsg');
+        const next_url = {{next | tojson}};
 
-        
         try {
             if ({{ setup | tojson }}) 
             {
@@ -108,8 +108,11 @@
                     )
                 });
                 const authenticationResult = await authenticationResponse.json();
-                if (authenticationResult.success)
-                    window.location.href = "/index";
+                if (authenticationResult.success){
+                    console.log(next_url);
+                    window.location.href = next_url;
+                }
+                    
                 else {
                     errorDiv.textContent = 'Autenticazione fallita';
                     errorDiv.classList.remove('hidden');

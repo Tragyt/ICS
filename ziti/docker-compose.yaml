@@ -78,10 +78,6 @@ services:
       ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
       ZITI_BOOTSTRAP_CONFIG_ARGS:      
     command: run config.yml
-    ports:
-      - 8081:8080
-    expose:
-      - ${ZITI_ROUTER_PORT_PLC1_HOST:-3022}
     restart: unless-stopped
     healthcheck:
       test:
@@ -120,10 +116,6 @@ services:
       ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
       ZITI_BOOTSTRAP_CONFIG_ARGS:      
     command: run config.yml
-    ports:
-      - 8082:8080
-    expose:
-      - ${ZITI_ROUTER_PORT_PLC2_HOST:-3022}
     restart: unless-stopped
     healthcheck:
       test:
@@ -162,10 +154,6 @@ services:
       ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
       ZITI_BOOTSTRAP_CONFIG_ARGS:      
     command: run config.yml
-    ports:
-      - 8083:8080
-    expose:
-      - ${ZITI_ROUTER_PORT_PLC3_HOST:-3022}
     restart: unless-stopped
     healthcheck:
       test:
@@ -204,10 +192,6 @@ services:
       ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
       ZITI_BOOTSTRAP_CONFIG_ARGS:    
     command: run config.yml
-    ports:
-      - 8084:8080
-    expose:
-      - ${ZITI_ROUTER_PORT_PLC4_HOST:-3022}
     restart: unless-stopped
     healthcheck:
       test:
@@ -583,7 +567,6 @@ services:
       - ZITI_USER=${ZITI_USER:-admin}
       - ZITI_PWD=${ZITI_PWD}
       - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}  
-      - PLC=-scada
     entrypoint: ["/bin/sh", "/bootstrap.sh"]
     depends_on:
       ziti-controller:

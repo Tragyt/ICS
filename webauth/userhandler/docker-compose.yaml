@@ -67,7 +67,6 @@ services:
       - ZITI_USER=${ZITI_USER:-admin}
       - ZITI_PWD=${ZITI_PWD}
       - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}
-      - PLC=-userhandler
     entrypoint: [ "/bin/sh", "/bootstrap.sh" ]
     depends_on:
       ziti-controller:
@@ -117,10 +116,6 @@ services:
       ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}
       ZITI_BOOTSTRAP_CONFIG_ARGS:
     command: run config.yml
-    ports:
-      - ${ZITI_INTERFACE:-0.0.0.0}:${ZITI_ROUTER_PORT_DB_HOST:-3022}:${ZITI_ROUTER_PORT:-3022}
-    expose:
-      - ${ZITI_ROUTER_PORT_DB_HOST:-3022}
     restart: unless-stopped
     healthcheck:
       test:
@@ -142,7 +137,6 @@ services:
       - ZITI_USER=${ZITI_USER:-admin}
       - ZITI_PWD=${ZITI_PWD}
       - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}
-      - PLC=db
     entrypoint: [ "/bin/sh", "/bootstrap.sh" ]
     depends_on:
       ziti-controller:

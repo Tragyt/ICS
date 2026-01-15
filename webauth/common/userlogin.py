@@ -1,5 +1,5 @@
-from flask import Blueprint, request, jsonify, session
-from flask_login import login_user
+from flask import Blueprint, request, jsonify, session, redirect, current_app
+from flask_login import login_user, logout_user
 
 from urllib.parse import urlparse
 from webauthn.helpers.structs import UserVerificationRequirement
@@ -44,9 +44,11 @@ def login_verify():
         challenge = session.get(f"challenge_{user.id}")
         if not challenge:
             return jsonify({'error': "challenge non presente"}), 500
+        
+        host = request.headers.get("Origin", request.host)
         result = webauthn.verify_authentication_response(
             credential=credential,
-            expected_origin=f"{request.scheme}://{request.host}",
+            expected_origin=f"{host}",
             expected_rp_id=_hostname(),
             expected_challenge=session.get(f"challenge_{user.id}"),
             credential_current_sign_count=user.current_sign_count,
@@ -57,4 +59,9 @@ def login_verify():
         login_user(user)
         return jsonify({'success': True, 'user': user.id}), 200
     except Exception as e:
-        return jsonify({'error': f'Errore durante la verifica delle credenziali.'}), 500
+        return jsonify({'error': f'Errore durante la verifica delle credenziali. {e}'}), 500
+
+@userlogin.route('/logout')
+def logout():
+    logout_user()
+    return redirect('/')

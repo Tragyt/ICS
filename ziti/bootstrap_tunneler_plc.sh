@@ -41,11 +41,12 @@ if [ ! -f /ziti-router/enroll.jwt ]; then
         --role-attributes plc-webserver-services${PLC}
 
     ziti edge create service-policy "plc-webserver-policy${PLC}" Bind \
-        --service-roles "plc-webserver-services${PLC}" \
+        --service-roles "#plc-webserver-services${PLC}" \
         --identity-roles "#plc${PLC}"
+
     ziti edge create service-policy "webserver-client-policy${PLC}" Dial \
-        --service-roles "plc-webserver-services${PLC}" \
-        --identity-roles "#logingateway"
+        --service-roles "#plc-webserver-services${PLC}" \
+        --identity-roles "#nginx"
 fi
 
 chown -R ${ZIGGY_UID:-2171} /ziti-router

@@ -1,0 +1,72 @@
+services:
+  nginx:
+    image: nginx:stable-alpine3.23
+    container_name: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      ziti-tunneler-nginx:
+          condition: service_healthy
+    network_mode: service:ziti-tunneler-nginx
+
+  ziti-tunneler-nginx:
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router}
+    container_name: ziti-tunneler-nginx
+    depends_on:
+      ziti-tunneler-nginx-init:
+        condition: service_completed_successfully
+    volumes:
+      - ziti-nginx:/ziti-router
+      - ./ziti/enroll.sh:/ziti-router/enroll.sh
+    entrypoint: [ "/ziti-router/enroll.sh" ]
+    environment:
+      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}
+      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-nginx}
+      ZITI_ROUTER_PORT: ${ZITI_ROUTER_PORT:-3022}
+      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-tproxy}
+      ZITI_AUTO_RENEW_CERTS: true
+      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}
+    command: run config.yml
+    ports:
+      - 5050:5050
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - ziti
+        - agent
+        - stats
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+    user: root
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - ziti
+
+  ziti-tunneler-nginx-init:
+    container_name: ziti-tunneler-nginx-init
+    image: "openziti/ziti-cli:latest"
+    user: root
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}
+    entrypoint: [ "/bin/sh", "/bootstrap.sh" ]
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    volumes:
+      - ziti-nginx:/ziti-router
+      - ./nginx/bootstrap_tunneler_nginx.sh:/bootstrap.sh
+    networks:
+      - ziti
+
+volumes:
+  ziti-nginx:

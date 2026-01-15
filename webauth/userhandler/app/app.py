@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, render_template, redirect, session
+from flask import Flask, render_template, session
 from flask_migrate import Migrate
 from flask_login import LoginManager, login_required, logout_user
 
@@ -33,9 +33,9 @@ def load_user(user_id):
 def login():
     if not User.query.filter_by(role=Role.ADMIN.value).first():
         session["setup"] = True
-        return render_template('login.html', setup=True, userhandler=True)
+        return render_template('login.html', setup=True, userhandler=True, next="/index")
     session.pop("setup", None)
-    return render_template('login.html', setup=False, userhandler=True)
+    return render_template('login.html', setup=False, userhandler=True, next="/index")
 
 
 @app.route('/index')
@@ -49,10 +49,3 @@ def index():
 @login_required
 def register():
     return render_template('register.html', userhandler=True)
-
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect('/', userhandler=True)

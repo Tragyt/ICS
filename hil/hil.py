@@ -3,9 +3,9 @@ import os
 
 from pyModbusTCP.client import ModbusClient
 
-# linting test
 PLC_ADDRESS = 'ziti' + '.plc' + os.environ['plc']
 client = ModbusClient(PLC_ADDRESS, 502)
+
 
 def start_plc():
     client.write_single_coil(0, True)
@@ -38,6 +38,7 @@ def work():
     client.write_single_coil(10, False)
     print("Work finished")
 
+
 while not client.open():
     print("waiting for " + PLC_ADDRESS + "...")
     time.sleep(0.5)
@@ -46,8 +47,8 @@ while True:
     try:
         client.read_coils(2, 1)[0]
         break
-    except:
-        pass
+    except Exception as e:
+        print(e)
 
 start_plc()
 while client.open():
@@ -69,7 +70,10 @@ while client.open():
 
         work_finished_signal = client.read_coils(4, 1)[0]
         piece_available_signal = client.read_coils(6, 1)[0]
-        if not work_finished_signal and up_limit_signal and not piece_available_signal:
+
+        if not work_finished_signal \
+                and up_limit_signal \
+                and not piece_available_signal:
             print("Waiting for piece...")
             time.sleep(2)
             client.write_single_coil(3, True)  # set piece ready

@@ -1,9 +1,7 @@
 import os
 
-from urllib.parse import urljoin, urlparse, parse_qs, urlencode, urlunparse
-
-from flask import Flask, render_template, request, Response, abort
-from flask_login import LoginManager, login_required, current_user
+from flask import Flask, render_template, request
+from flask_login import LoginManager, current_user
 
 from common.models import User, db
 from common.userlogin import userlogin
@@ -37,7 +35,12 @@ def load_user(user_id):
 @app.route('/login_', methods=['GET'])
 def login():
     next_url = request.args.get('next')
-    return render_template('login.html', setup=False, userhandler=False, next=next_url)
+    return render_template(
+        'login.html',
+        setup=False,
+        userhandler=False,
+        next=next_url
+    )
 
 
 @app.route('/auth')

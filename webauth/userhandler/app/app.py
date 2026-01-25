@@ -2,7 +2,7 @@ import os
 
 from flask import Flask, render_template, session
 from flask_migrate import Migrate
-from flask_login import LoginManager, login_required, logout_user
+from flask_login import LoginManager, login_required
 
 from common.models import db, User, UserRole as Role
 from usermanagement import usermanagement
@@ -33,9 +33,19 @@ def load_user(user_id):
 def login():
     if not User.query.filter_by(role=Role.ADMIN.value).first():
         session["setup"] = True
-        return render_template('login.html', setup=True, userhandler=True, next="/index")
+        return render_template(
+            'login.html',
+            setup=True,
+            userhandler=True,
+            next="/index"
+        )
     session.pop("setup", None)
-    return render_template('login.html', setup=False, userhandler=True, next="/index")
+    return render_template(
+        'login.html',
+        setup=False,
+        userhandler=True,
+        next="/index"
+    )
 
 
 @app.route('/index')

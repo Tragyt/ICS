@@ -6,12 +6,14 @@ from common.userlogin import _hostname
 
 from sqlalchemy.exc import IntegrityError
 from flask import Blueprint, session, request, jsonify
-from webauthn.helpers.structs import AuthenticatorSelectionCriteria, ResidentKeyRequirement, UserVerificationRequirement
+from webauthn.helpers.structs import AuthenticatorSelectionCriteria, \
+    ResidentKeyRequirement, UserVerificationRequirement
 from flask_login import login_required
 
 import webauthn
 
 usermanagement = Blueprint('usermanagement', __name__)
+
 
 def _register_user(username, name, role=Role.USER.value):
     user = User(username=username, name=name,
@@ -27,16 +29,18 @@ def _register_user(username, name, role=Role.USER.value):
             msg = str(e.orig)
         return {'status': 'error', 'message': msg}, 400
 
-    public_credential_creation_options = webauthn.generate_registration_options(
-        rp_id=_hostname(),
-        rp_name="User Handler",
-        user_name=user.username,
-        authenticator_selection=AuthenticatorSelectionCriteria(
-            resident_key=ResidentKeyRequirement.REQUIRED,
-            user_verification=UserVerificationRequirement.PREFERRED)
-    )
+    public_credential_creation_options =\
+        webauthn.generate_registration_options(
+            rp_id=_hostname(),
+            rp_name="User Handler",
+            user_name=user.username,
+            authenticator_selection=AuthenticatorSelectionCriteria(
+                resident_key=ResidentKeyRequirement.REQUIRED,
+                user_verification=UserVerificationRequirement.PREFERRED)
+        )
 
-    session[f"challenge_{user.id}"] = public_credential_creation_options.challenge
+    session[f"challenge_{user.id}"] = \
+        public_credential_creation_options.challenge
     return public_credential_creation_options, user.id
 
 
@@ -58,9 +62,10 @@ def _verify_save_credentials(user_id, credential):
     db.session.commit()
     return {'status': 'ok'}, 200
 
+
 @usermanagement.route('/setup-user', methods=['POST'])
 def setup_user():
-    if session.get("setup") != True:
+    if session.get("setup") is not True:
         return {'status': 'error', 'message': 'Setup già completato'}, 403
 
     token = request.get_json().get('token')
@@ -69,11 +74,12 @@ def setup_user():
 
     public_credential_creation_options, user_id = _register_user(
         "admin", "admin", Role.ADMIN.value)
-    
+
     tmp_token = secrets.token_urlsafe(16)
     session["tmp_token"] = tmp_token
     return jsonify({
-        'publicCredentialCreationOptions': webauthn.options_to_json(public_credential_creation_options),
+        'publicCredentialCreationOptions':
+        webauthn.options_to_json(public_credential_creation_options),
         'user_id': user_id,
         'token': tmp_token
     })
@@ -81,14 +87,18 @@ def setup_user():
 
 @usermanagement.route('/verify-setup-user', methods=['POST'])
 def verify_setup_user():
-    if session.pop("setup", None) != True:
+    if session.pop("setup", None) is not True:
         return {'status': 'error', 'message': 'Setup già completato'}, 403
     data = request.json
     token = data.get('token')
     user_id = data.get('user_id')
     sess_token = session.get("tmp_token")
     if token != session.pop("tmp_token", None):
-        return jsonify({'error': 'Token di verifica non valido', 'token1': token, 'token2': sess_token}), 403
+        return jsonify(
+            {'error': 'Token di verifica non valido',
+             'token1': token,
+             'token2': sess_token}
+        ), 403
     return _verify_save_credentials(user_id, data.get('credential'))
 
 
@@ -101,7 +111,8 @@ def register_user():
 
     public_credential_creation_options, user = _register_user(username, name)
     return jsonify({
-        'publicCredentialCreationOptions': webauthn.options_to_json(public_credential_creation_options),
+        'publicCredentialCreationOptions':
+        webauthn.options_to_json(public_credential_creation_options),
         'user_id': user
     })
 

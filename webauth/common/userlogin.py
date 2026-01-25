@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session, redirect, current_app
+from flask import Blueprint, request, jsonify, session, redirect
 from flask_login import login_user, logout_user
 
 from urllib.parse import urlparse
@@ -11,8 +11,10 @@ from common.models import User
 
 userlogin = Blueprint('userlogin', __name__)
 
+
 def _hostname():
     return str(urlparse(request.host_url).hostname)
+
 
 @userlogin.route('/autentication-options', methods=['POST'])
 def authenticate():
@@ -20,8 +22,10 @@ def authenticate():
     user = User.query.filter(User.username == username).first()
     if not user:
         return jsonify({'error': "utente non trovato"}), 500
-    options = webauthn.generate_authentication_options(rp_id=_hostname(),
-                                                       user_verification=UserVerificationRequirement.PREFERRED)
+    options = webauthn.generate_authentication_options(
+        rp_id=_hostname(),
+        user_verification=UserVerificationRequirement.PREFERRED
+    )
     session[f"challenge_{user.id}"] = options.challenge
     jsonOptions = webauthn.options_to_json(options)
     return jsonify(jsonOptions)
@@ -44,9 +48,9 @@ def login_verify():
         challenge = session.get(f"challenge_{user.id}")
         if not challenge:
             return jsonify({'error': "challenge non presente"}), 500
-        
+
         host = request.headers.get("Origin", request.host)
-        result = webauthn.verify_authentication_response(
+        webauthn.verify_authentication_response(
             credential=credential,
             expected_origin=f"{host}",
             expected_rp_id=_hostname(),
@@ -59,7 +63,10 @@ def login_verify():
         login_user(user)
         return jsonify({'success': True, 'user': user.id}), 200
     except Exception as e:
-        return jsonify({'error': f'Errore durante la verifica delle credenziali. {e}'}), 500
+        return jsonify(
+            {'error': f'Errore durante la verifica delle credenziali. {e}'}
+        ), 500
+
 
 @userlogin.route('/logout')
 def logout():

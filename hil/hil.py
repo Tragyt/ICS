@@ -3,6 +3,7 @@ import os
 
 from pyModbusTCP.client import ModbusClient
 
+# linting test
 PLC_ADDRESS = 'ziti' + '.plc' + os.environ['plc']
 client = ModbusClient(PLC_ADDRESS, 502)
 

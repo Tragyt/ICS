@@ -1,5 +1,4 @@
 import os
-import hashlib
 
 from flask import Flask, render_template, request
 from flask_login import LoginManager, current_user

@@ -1,7 +1,7 @@
 name: pipeline
 
 on:
-    push:
+    push: {}
 
 jobs:
 
@@ -24,3 +24,17 @@ jobs:
 
             - name: Run flake8
               run: flake8 --exclude ./webauth/userhandler/app/migrations/  .
+
+    lint-docker:
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Checkout repo
+          uses: actions/checkout@v3
+
+        - name: Hadolint
+          uses: hadolint/hadolint-action@v3.1.0
+          with:
+            dockerfile: Dockerfile
+            recursive: true
+        

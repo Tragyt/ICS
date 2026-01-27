@@ -1,16 +1,19 @@
+# name: ICS
+
+
 services:
   nginx:
     image: nginx:stable-alpine3.23
     container_name: nginx
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       ziti-tunneler-nginx:
-          condition: service_healthy
+        condition: service_healthy
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     network_mode: service:ziti-tunneler-nginx
 
   ziti-tunneler-nginx:
-    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router}
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router:1.6.12} #:1.5.10
     container_name: ziti-tunneler-nginx
     depends_on:
       ziti-tunneler-nginx-init:
@@ -18,7 +21,6 @@ services:
     volumes:
       - ziti-nginx:/ziti-router
       - ./ziti/enroll.sh:/ziti-router/enroll.sh
-    entrypoint: [ "/ziti-router/enroll.sh" ]
     environment:
       ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}
       ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}
@@ -27,9 +29,15 @@ services:
       ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-tproxy}
       ZITI_AUTO_RENEW_CERTS: true
       ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}
-    command: run config.yml
     ports:
-      - 5050:5050
+      - target: 5050
+        published: 5050
+        host_ip: 127.0.0.1 
+    networks:
+      - ziti
+    command: run config.yml
+    entrypoint:
+      - /ziti-router/enroll.sh
     restart: unless-stopped
     healthcheck:
       test:
@@ -41,32 +49,33 @@ services:
       timeout: 3s
       retries: 5
       start_period: 15s
-    dns:
-      - 127.0.0.1
-      - 1.1.1.1
     user: root
     cap_add:
       - NET_ADMIN
-    networks:
-      - ziti
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
 
   ziti-tunneler-nginx-init:
+    image: openziti/ziti-cli:1.6.12 #:1.5.10 docker pull 
     container_name: ziti-tunneler-nginx-init
-    image: "openziti/ziti-cli:latest"
-    user: root
-    environment:
-      - ZITI_USER=${ZITI_USER:-admin}
-      - ZITI_PWD=${ZITI_PWD}
-      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}
-    entrypoint: [ "/bin/sh", "/bootstrap.sh" ]
     depends_on:
       ziti-controller:
         condition: service_healthy
     volumes:
       - ziti-nginx:/ziti-router
       - ./nginx/bootstrap_tunneler_nginx.sh:/bootstrap.sh
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}
     networks:
       - ziti
+    entrypoint:
+      - /bin/sh
+      - /bootstrap.sh
+    user: root
+
 
 volumes:
-  ziti-nginx:
+  ziti-nginx: null

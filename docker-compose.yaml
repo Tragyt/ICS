@@ -1,152 +1,158 @@
+name: ICS
+
+
 services:
-
-#PLC
-  plc1:
-    pull_policy: never
-    container_name: plc1
-    build:
-      context: ./plc
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    healthcheck:
-      test: ["CMD", "test", "-f", "/tmp/.plc_ready"]
-      interval: 2s
-      timeout: 1s
-      retries: 30
-      start_period: 5s
-    depends_on:
-      ziti-tunneler-plc1:
-          condition: service_healthy
-    network_mode: service:ziti-tunneler-plc1
-
-  plc2:
-    pull_policy: never
-    container_name: plc2
-    build:
-      context: ./plc
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    healthcheck:
-      test: ["CMD", "test", "-f", "/tmp/.plc_ready"]
-      interval: 2s
-      timeout: 1s
-      retries: 30
-      start_period: 5s
-    depends_on:
-      ziti-tunneler-plc2:
-          condition: service_healthy
-    network_mode: service:ziti-tunneler-plc2
-
-  plc3:
-    pull_policy: never
-    container_name: plc3
-    build:
-      context: ./plc
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    healthcheck:
-      test: ["CMD", "test", "-f", "/tmp/.plc_ready"]
-      interval: 2s
-      timeout: 1s
-      retries: 30
-      start_period: 5s
-    depends_on:
-      ziti-tunneler-plc3:
-          condition: service_healthy
-    network_mode: service:ziti-tunneler-plc3
-
-  plc4:
-    pull_policy: never
-    container_name: plc4
-    build:
-      context: ./plc
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    healthcheck:
-      test: ["CMD", "test", "-f", "/tmp/.plc_ready"]
-      interval: 2s
-      timeout: 1s
-      retries: 30
-      start_period: 5s
-    depends_on:
-      ziti-tunneler-plc4:
-          condition: service_healthy
-    network_mode: service:ziti-tunneler-plc4
-      
-# HIL
   hil1:
-    pull_policy: never
-    container_name: hil1
     build:
       context: ./hil
       dockerfile: Dockerfile
-    environment:
-      - plc=1
+    container_name: hil1
     depends_on:
       plc1:
         condition: service_healthy
       ziti-tunneler-hil1:
-          condition: service_healthy
+        condition: service_healthy
+    environment:
+    - plc=1
     network_mode: service:ziti-tunneler-hil1
-
-  hil2:
     pull_policy: never
-    container_name: hil2
+  hil2:
     build:
       context: ./hil
       dockerfile: Dockerfile
-    environment:
-      - plc=2
+    container_name: hil2
     depends_on:
       plc2:
         condition: service_healthy
       ziti-tunneler-hil2:
-          condition: service_healthy
+        condition: service_healthy
+    environment:
+    - plc=2
     network_mode: service:ziti-tunneler-hil2
-
-  hil3:
     pull_policy: never
-    container_name: hil3
+  hil3:
     build:
       context: ./hil
       dockerfile: Dockerfile
-    environment:
-      - plc=3
+    container_name: hil3
     depends_on:
       plc3:
         condition: service_healthy
       ziti-tunneler-hil3:
-          condition: service_healthy
+        condition: service_healthy
+    environment:
+    - plc=3
     network_mode: service:ziti-tunneler-hil3
-
-  hil4:
     pull_policy: never
-    container_name: hil4
+  hil4:
     build:
       context: ./hil
       dockerfile: Dockerfile
-    environment:
-      - plc=4
+    container_name: hil4
     depends_on:
       plc4:
         condition: service_healthy
       ziti-tunneler-hil4:
-          condition: service_healthy
+        condition: service_healthy
+    environment:
+    - plc=4
     network_mode: service:ziti-tunneler-hil4
-
-# SCADA
-  scada:
     pull_policy: never
-    container_name: scada
+
+  plc1:
+    build:
+      context: ./plc
+      dockerfile: Dockerfile
+    container_name: plc1
+    depends_on:
+      ziti-tunneler-plc1:
+        condition: service_healthy
+    env_file:
+    - .env
+    network_mode: service:ziti-tunneler-plc1
+    healthcheck:
+      test:
+      - CMD
+      - test
+      - -f
+      - /tmp/.plc_ready
+      interval: 2s
+      timeout: 1s
+      retries: 30
+      start_period: 5s
+    pull_policy: never
+  plc2:
+    build:
+      context: ./plc
+      dockerfile: Dockerfile
+    container_name: plc2
+    depends_on:
+      ziti-tunneler-plc2:
+        condition: service_healthy
+    env_file:
+    - .env
+    network_mode: service:ziti-tunneler-plc2
+    healthcheck:
+      test:
+      - CMD
+      - test
+      - -f
+      - /tmp/.plc_ready
+      interval: 2s
+      timeout: 1s
+      retries: 30
+      start_period: 5s
+    pull_policy: never
+  plc3:
+    build:
+      context: ./plc
+      dockerfile: Dockerfile
+    container_name: plc3
+    depends_on:
+      ziti-tunneler-plc3:
+        condition: service_healthy
+    env_file:
+    - .env
+    network_mode: service:ziti-tunneler-plc3
+    healthcheck:
+      test:
+      - CMD
+      - test
+      - -f
+      - /tmp/.plc_ready
+      interval: 2s
+      timeout: 1s
+      retries: 30
+      start_period: 5s
+    pull_policy: never
+  plc4:
+    build:
+      context: ./plc
+      dockerfile: Dockerfile
+    container_name: plc4
+    depends_on:
+      ziti-tunneler-plc4:
+        condition: service_healthy
+    env_file:
+    - .env
+    network_mode: service:ziti-tunneler-plc4
+    healthcheck:
+      test:
+      - CMD
+      - test
+      - -f
+      - /tmp/.plc_ready
+      interval: 2s
+      timeout: 1s
+      retries: 30
+      start_period: 5s
+    pull_policy: never
+
+  scada:
     build:
       context: ./scada
       dockerfile: Dockerfile
-    volumes:
-      - scada:/opt/ScadaBR/tomcat/webapps/ScadaBR/db
+    container_name: scada
     depends_on:
       plc1:
         condition: service_healthy
@@ -157,16 +163,16 @@ services:
       plc4:
         condition: service_healthy
       ziti-tunneler-scada:
-          condition: service_healthy
+        condition: service_healthy
+    volumes:
+    - scada:/opt/ScadaBR/tomcat/webapps/ScadaBR/db
     network_mode: service:ziti-tunneler-scada
+    pull_policy: never
 
-volumes:
-  scada:
 
 networks:
   ziti:
     driver: bridge
 
-
-
-
+volumes:
+  scada: null

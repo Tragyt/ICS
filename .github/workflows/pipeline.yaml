@@ -90,10 +90,10 @@ jobs:
         - name: Test hils
           run: |
             sleep 2
-            docker logs hil1 | grep -q Working
-            docker logs hil2 | grep -q Working
-            docker logs hil3 | grep -q Working
-            docker logs hil4 | grep -q Working
+            docker logs hil1 | grep -q Waiting
+            docker logs hil2 | grep -q Waiting
+            docker logs hil3 | grep -q Waiting
+            docker logs hil4 | grep -q Waiting
 
         - name: Test nginx and logingateway
           run: |

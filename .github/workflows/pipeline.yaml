@@ -49,7 +49,9 @@ jobs:
         - name: Checkout repo
           uses: actions/checkout@v6
         - name: Run containers
-          run: docker compose up --build -d
+          run: |
+            export $(cat .env.example | xargs)
+            docker compose up --build -d
         - name: Test plcs
           run: |
             all_healthy=false

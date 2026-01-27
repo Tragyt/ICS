@@ -1,18 +1,18 @@
 #!/bin/sh
 
-ziti edge login https://ziti-edge-controller:${ZITI_CTRL_EDGE_ADVERTISED_PORT} \
-    --username=${ZITI_USER} \
-    --password=${ZITI_PWD} \
+ziti edge login https://ziti-edge-controller:"${ZITI_CTRL_EDGE_ADVERTISED_PORT}" \
+    --username="${ZITI_USER}" \
+    --password="${ZITI_PWD}" \
     --yes 
 
 if [ ! -f /ziti-router/enroll.jwt ]; then
     echo 'Create PLC router'
-    ziti edge create edge-router plc-router${PLC} \
+    ziti edge create edge-router plc-router"${PLC}" \
         --tunneler-enabled \
         --jwt-output-file /ziti-router/enroll.jwt 
 
     ziti edge update identity "plc-router${PLC}" \
-        --role-attributes plc${PLC}
+        --role-attributes plc"${PLC}"
 
     ziti edge create config "plc-config${PLC}" host.v1 \
         '{"protocol":"tcp", "address":"127.0.0.1","port":502}'
@@ -20,8 +20,8 @@ if [ ! -f /ziti-router/enroll.jwt ]; then
         "{\"protocols\":[\"tcp\"],\"addresses\":[\"ziti.plc${PLC}\"], \"portRanges\":[{\"low\":502, \"high\":502}]}"
         
     ziti edge create service "plc-service${PLC}" \
-        --configs hil-config${PLC},plc-config${PLC} \
-        --role-attributes plc-services${PLC}
+        --configs hil-config"${PLC}",plc-config"${PLC}" \
+        --role-attributes plc-services"${PLC}"
 
     ziti edge create service-policy "plc-policy${PLC}" Bind \
         --service-roles "#plc-services${PLC}" \
@@ -37,8 +37,8 @@ if [ ! -f /ziti-router/enroll.jwt ]; then
         "{\"protocols\":[\"tcp\"],\"addresses\":[\"ziti.plc${PLC}.webserver\"], \"portRanges\":[{\"low\":8080, \"high\":8080}]}"
 
     ziti edge create service "plc-webserver-service${PLC}" \
-        --configs plc-webserver-config${PLC},webserver-client-config${PLC} \
-        --role-attributes plc-webserver-services${PLC}
+        --configs plc-webserver-config"${PLC}",webserver-client-config"${PLC}" \
+        --role-attributes plc-webserver-services"${PLC}"
 
     ziti edge create service-policy "plc-webserver-policy${PLC}" Bind \
         --service-roles "#plc-webserver-services${PLC}" \
@@ -49,6 +49,6 @@ if [ ! -f /ziti-router/enroll.jwt ]; then
         --identity-roles "#nginx"
 fi
 
-chown -R ${ZIGGY_UID:-2171} /ziti-router
+chown -R "${ZIGGY_UID:-2171}" /ziti-router
 echo 'init finished'
 

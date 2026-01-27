@@ -48,6 +48,14 @@ jobs:
         - name: dclint
           run: find . -type f -name "docker-compose.*" -exec docker run -t --rm -v "${PWD}:/app" zavoloklom/dclint {} \;
 
+    lint-shell:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repo
+          uses: actions/checkout@v6
+        - name: shellcheck
+          run: find . -type f -name "*.sh" -exec shellcheck {} \;
+
     test-network:
       runs-on: ubuntu-latest
       steps:

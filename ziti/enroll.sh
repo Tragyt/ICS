@@ -8,7 +8,8 @@ done
 
 if [ ! -f "/ziti-router/config.yml" ]; then
   echo "enrollment..."
-  export ZITI_ENROLL_TOKEN="$(</ziti-router/enroll.jwt)"
+  ZITI_ENROLL_TOKEN="$(cat /ziti-router/enroll.jwt)"
+  export ZITI_ENROLL_TOKEN
 else
   unset ZITI_ENROLL_TOKEN
 fi

@@ -93,7 +93,7 @@ services:
       - /bootstrap.sh
 
   ziti-tunneler-userhandler:
-    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router:1.6.12 }
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router:1.6.12}
     container_name: ziti-tunneler-userhandler
     depends_on:
       ziti-tunneler-userhandler-init:

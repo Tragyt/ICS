@@ -42,3 +42,47 @@ jobs:
             for f in $(find . -type f -name "docker-compose.*"); do 
               docker run -t --rm -v ${PWD}:/app zavoloklom/dclint $f 
             done
+
+    test-network:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repo
+          uses: actions/checkout@v6
+        - name: Run containers
+          run: docker compose up --build -d
+        - name: Test plcs
+          run: |
+            all_healthy=false
+            until [[ $all_healthy == true ]];
+            do
+                sleep 2
+                plc1_status=$(docker inspect -f '{{.State.Status}}' plc1)
+                plc2_status=$(docker inspect -f '{{.State.Status}}' plc2)
+                plc3_status=$(docker inspect -f '{{.State.Status}}' plc3)
+                plc4_status=$(docker inspect -f '{{.State.Status}}' plc4)
+
+                if [[ "$plc1_status" == "exited" || "$plc1_status" == "dead" ]]; then
+                  echo "plc1 error"
+                  exit 1
+                fi
+                if [[ "$plc2_status" == "exited" || "$plc2_status" == "dead" ]]; then
+                  echo "plc2 error"
+                  exit 1
+                fi
+                if [[ "$plc3_status" == "exited" || "$plc3_status" == "dead" ]]; then
+                  echo "plc3 error"
+                  exit 1
+                fi
+                if [[ "$plc4_status" == "exited" || "$plc4_status" == "dead" ]]; then
+                  echo "plc4 error"
+                  exit 1
+                fi
+
+                if [[ "$(docker inspect -f '{{.State.Health.Status}}' plc1)" == "healthy" \
+                    && "$(docker inspect -f '{{.State.Health.Status}}' plc2)" == "healthy" \
+                    && "$(docker inspect -f '{{.State.Health.Status}}' plc3)" == "healthy" \
+                    && "$(docker inspect -f '{{.State.Health.Status}}' plc4)" == "healthy" ]]; then
+                  all_healthy=true
+                fi
+            done
+        # - name: Test hil1

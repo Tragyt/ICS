@@ -12,4 +12,4 @@ echo ">> DONE"
 touch /tmp/.plc_ready
 
 #pkill -f webserver
-tail -f /dev/null
+# tail -f /dev/null

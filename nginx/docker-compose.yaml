@@ -2,6 +2,7 @@
 
 
 services:
+
   nginx:
     image: nginx:stable-alpine3.23
     container_name: nginx
@@ -13,7 +14,7 @@ services:
     network_mode: service:ziti-tunneler-nginx
 
   ziti-tunneler-nginx:
-    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router:1.6.12} #:1.5.10
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router:1.6.12}
     container_name: ziti-tunneler-nginx
     depends_on:
       ziti-tunneler-nginx-init:
@@ -57,7 +58,7 @@ services:
       - 1.1.1.1
 
   ziti-tunneler-nginx-init:
-    image: openziti/ziti-cli:1.6.12 #:1.5.10 docker pull 
+    image: openziti/ziti-cli:1.6.12 
     container_name: ziti-tunneler-nginx-init
     depends_on:
       ziti-controller:

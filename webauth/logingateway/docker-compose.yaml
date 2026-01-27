@@ -1,20 +1,24 @@
+name: ICS
+
+
 services:
+
   logingateway:
-    container_name: logingateway
     build:
       context: .
       dockerfile: webauth/logingateway/Dockerfile
-    environment:
-      DATABASE_URL: "postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@ziti.db:5432/app"
-      SECRET_KEY: ${SECRET_KEY_GATEWAY}
-      PYTHONPATH: /app/logingateway
+    container_name: logingateway
     depends_on:
       ziti-tunneler-logingateway:
         condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@ziti.db:5432/app
+      SECRET_KEY: ${SECRET_KEY_GATEWAY}
+      PYTHONPATH: /app/logingateway
     network_mode: service:ziti-tunneler-logingateway
 
   ziti-tunneler-logingateway:
-    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router}
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router:1.6.12}
     container_name: ziti-tunneler-logingateway
     depends_on:
       ziti-tunneler-logingateway-init:
@@ -22,7 +26,6 @@ services:
     volumes:
       - ziti-logingateway:/ziti-router
       - ./ziti/enroll.sh:/ziti-router/enroll.sh
-    entrypoint: [ "/ziti-router/enroll.sh" ]
     environment:
       ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}
       ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}
@@ -31,7 +34,11 @@ services:
       ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-tproxy}
       ZITI_AUTO_RENEW_CERTS: true
       ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}
+    networks:
+      - ziti
     command: run config.yml
+    entrypoint:
+      - /ziti-router/enroll.sh
     restart: unless-stopped
     healthcheck:
       test:
@@ -43,57 +50,38 @@ services:
       timeout: 3s
       retries: 5
       start_period: 15s
-    dns:
-      - 127.0.0.1
-      - 1.1.1.1
     user: root
     cap_add:
       - NET_ADMIN
-    networks:
-      - ziti
-
-  ziti-tunneler-logingateway-init:
-    container_name: ziti-tunneler-logingateway-init
-    image: "openziti/ziti-cli:latest"
-    user: root
-    environment:
-      - ZITI_USER=${ZITI_USER:-admin}
-      - ZITI_PWD=${ZITI_PWD}
-      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}
-    entrypoint: [ "/bin/sh", "/bootstrap.sh" ]
-    depends_on:
-      ziti-controller:
-        condition: service_healthy
-    volumes:
-      - ziti-logingateway:/ziti-router
-      - ./webauth/logingateway/bootstrap_tunneler_logingateway.sh:/bootstrap.sh
-    networks:
-      - ziti
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
 
   ziti-tunneler-logingateway-host:
-    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router}
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router:1.6.12}
     container_name: ziti-tunneler-logingateway-host
     depends_on:
       ziti-tunneler-logingateway-host-init:
         condition: service_completed_successfully
-    user: ${ZIGGY_UID:-2171}
     volumes:
       - ziti-logingateway-host:/ziti-router
       - ./ziti/enroll.sh:/ziti-router/enroll.sh
-    entrypoint: ["/ziti-router/enroll.sh"]
     environment:
-      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}                 
-      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}                         
-      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-logingateway-host}  
-      ZITI_ROUTER_PORT: 3032                                    
-      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-host}              
-      ZITI_BOOTSTRAP: true             
-      ZITI_BOOTSTRAP_CONFIG: true     
-      ZITI_BOOTSTRAP_ENROLLMENT: true  
-      ZITI_AUTO_RENEW_CERTS: true    
-      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}  
-      ZITI_BOOTSTRAP_CONFIG_ARGS:      
+      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}
+      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-logingateway-host}
+      ZITI_ROUTER_PORT: 3032
+      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-host}
+      ZITI_BOOTSTRAP: true
+      ZITI_BOOTSTRAP_CONFIG: true
+      ZITI_BOOTSTRAP_ENROLLMENT: true
+      ZITI_AUTO_RENEW_CERTS: true
+      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}
+      ZITI_BOOTSTRAP_CONFIG_ARGS: null
+    network_mode: service:ziti-tunneler-logingateway
     command: run config.yml
+    entrypoint:
+      - /ziti-router/enroll.sh
     restart: unless-stopped
     healthcheck:
       test:
@@ -105,25 +93,48 @@ services:
       timeout: 3s
       retries: 5
       start_period: 15s
-    network_mode: service:ziti-tunneler-logingateway
+    user: ${ZIGGY_UID:-2171}
 
   ziti-tunneler-logingateway-host-init:
+    image: openziti/ziti-cli:1.6.12
     container_name: ziti-tunneler-logingateway-host-init
-    image: "openziti/ziti-cli:latest"
-    environment:
-      - ZITI_USER=${ZITI_USER:-admin}
-      - ZITI_PWD=${ZITI_PWD}
-      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}  
-    entrypoint: ["/bin/sh", "/bootstrap.sh"]
     depends_on:
       ziti-controller:
         condition: service_healthy
     volumes:
       - ziti-logingateway-host:/ziti-router
       - ./webauth/logingateway/bootstrap_tunneler_logingateway_host.sh:/bootstrap.sh
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}
     networks:
       - ziti
+    entrypoint:
+      - /bin/sh
+      - /bootstrap.sh
+
+  ziti-tunneler-logingateway-init:
+    image: openziti/ziti-cli:1.6.12 
+    container_name: ziti-tunneler-logingateway-init
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    volumes:
+      - ziti-logingateway:/ziti-router
+      - ./webauth/logingateway/bootstrap_tunneler_logingateway.sh:/bootstrap.sh
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}
+    networks:
+      - ziti
+    entrypoint:
+      - /bin/sh
+      - /bootstrap.sh
+    user: root
+
 
 volumes:
-  ziti-logingateway:
-  ziti-logingateway-host:
+  ziti-logingateway: null
+  ziti-logingateway-host: null

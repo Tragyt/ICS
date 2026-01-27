@@ -87,4 +87,27 @@ jobs:
                   all_healthy=true
                 fi
             done
-        # - name: Test hil1
+        - name: Test hils
+          run: |
+            sleep 2
+            docker logs hil1 | grep -q Working
+            docker logs hil2 | grep -q Working
+            docker logs hil3 | grep -q Working
+            docker logs hil4 | grep -q Working
+
+        - name: Test nginx and logingateway
+          run: |
+            if [[ 302 != $(curl -w "%{http_code}" -o /dev/null -s "http://localhost:5050/plc1/") ]]; then
+              exit 1
+            fi
+
+        - name: Test scada
+          run: |
+            docker logs scada | grep -q "import done!"
+
+        - name: Test userhandler
+          run: |
+            if [[ 200 != $(docker exec user_handler curl -o /dev/null -s -w %{http_code} "http://localhost:5000") ]]; then
+              exit 1
+            fi
+        

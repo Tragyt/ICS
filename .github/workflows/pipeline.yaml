@@ -50,7 +50,7 @@ jobs:
           uses: actions/checkout@v6
         - name: Run containers
           run: |
-            export $(cat .env.example | xargs)
+            cp .env.example .env;
             docker compose up --build -d
         - name: Test plcs
           run: |

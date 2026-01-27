@@ -5,6 +5,14 @@ on:
 
 jobs:
 
+    lint-pipeline:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout repo
+            uses: actions/checkout@v6
+          - name: actionlint
+            run: docker run --rm -v "$(pwd)":/repo --workdir /repo rhysd/actionlint:latest -color
+
     lint-python:
         runs-on: ubuntu-latest
         steps:
@@ -25,7 +33,7 @@ jobs:
       runs-on: ubuntu-latest
       steps:
         - name: Checkout repo
-          uses: actions/checkout@v3
+          uses: actions/checkout@v6
         - name: Hadolint
           uses: hadolint/hadolint-action@v3.1.0
           with:
@@ -38,10 +46,7 @@ jobs:
         - name: Checkout repo
           uses: actions/checkout@v6
         - name: dclint
-          run: |
-            for f in $(find . -type f -name "docker-compose.*"); do 
-              docker run -t --rm -v ${PWD}:/app zavoloklom/dclint $f 
-            done
+          run: find . -type f -name "docker-compose.*" -exec docker run -t --rm -v "${PWD}:/app" zavoloklom/dclint {} \;
 
     test-network:
       runs-on: ubuntu-latest
@@ -116,10 +121,10 @@ jobs:
 
         - name: Test userhandler
           run: |
-            sleep 5
-            docker exec user_handler curl -o /dev/null -s -w %{http_code} "http://localhost:5000"
+            sleep 5;
+            docker exec user_handler curl -o /dev/null -s -w "%{http_code}" "http://localhost:5000";
 
-            if [[ 200 != $(docker exec user_handler curl -o /dev/null -s -w %{http_code} "http://localhost:5000") ]]; then
+            if [[ 200 != $(docker exec user_handler curl -o /dev/null -s -w "%{http_code}" "http://localhost:5000") ]]; then
               exit 1
             fi
         

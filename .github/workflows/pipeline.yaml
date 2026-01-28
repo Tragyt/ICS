@@ -56,6 +56,17 @@ jobs:
         - name: shellcheck
           run: find . -type f -name "*.sh" -exec shellcheck {} \;
 
+    lint-html:
+      runs-on: node
+      steps:
+        - name: Checkout repo
+          uses: actions/checkout@v6
+        - name: htmlhint
+          run: |
+            yarn add --dev htmlhint
+            npx htmlhint --init
+            npx htmlhint "**/*.html"
+
     test-network:
       runs-on: ubuntu-latest
       steps:

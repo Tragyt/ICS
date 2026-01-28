@@ -63,10 +63,13 @@ jobs:
           uses: actions/checkout@v6
         - name: Setup node
           uses: actions/setup-node@v6
+        - name: Install dependecies
+          run: apt-get update && apt-get install -y jq
         - name: htmlhint
           run: |
             yarn add --dev htmlhint
             npx htmlhint --init
+            jq '. + {"doctype-first": false}' .htmlhintrc > tmp && mv tmp .htmlhintrc
             npx htmlhint "**/*.html"
 
     test-network:

@@ -57,10 +57,12 @@ jobs:
           run: find . -type f -name "*.sh" -exec shellcheck {} \;
 
     lint-html:
-      runs-on: node
+      runs-on: ubuntu-latest
       steps:
         - name: Checkout repo
           uses: actions/checkout@v6
+        - name: Setup node
+          uses: actions/setup-node@v6
         - name: htmlhint
           run: |
             yarn add --dev htmlhint

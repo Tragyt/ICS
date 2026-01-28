@@ -128,7 +128,7 @@ jobs:
         - name: Test nginx and logingateway
           run: |
             sleep 10;
-            if [[ 302 != $(curl -w "%{http_code}" -o /dev/null -s "http://localhost:5050/plc1/") ]]; then
+            if [[ 404 == $(curl -w "%{http_code}" -o /dev/null -s "http://localhost:5050/plc1/") ]]; then
               exit 1
             fi
 

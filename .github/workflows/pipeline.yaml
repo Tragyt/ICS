@@ -154,5 +154,6 @@ jobs:
           uses: actions/checkout@v6
         - name: Build and push
           run: |
+            cp .env.example .env;
             docker compose build
             docker compose push

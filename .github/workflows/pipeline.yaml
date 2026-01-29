@@ -135,4 +135,15 @@ jobs:
             if [[ 200 != $(docker exec user_handler curl -o /dev/null -s -w "%{http_code}" "http://localhost:5000") ]]; then
               exit 1
             fi
-        
+
+
+    deploy:
+      runs-on: self-hosted  
+      needs: [lint-pipeline,lint-python,lint-docker,lint-docker-compose,lint-shell,test-network]
+      steps:
+        - name: Checkout repo
+          uses: actions/checkout@v6
+        - name: Build and push
+          run: |
+            docker compose build
+            docker compose push

@@ -1,0 +1,18 @@
+name: ICS
+
+
+services:
+
+  registry:
+    image: registry:3.0.0
+    container_name: registry
+    ports:
+      - 5000:5000
+    restart: always
+    volumes:
+      - registry:/var/lib/registry
+
+
+volumes:
+  registry:
+

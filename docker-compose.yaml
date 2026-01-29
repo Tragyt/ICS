@@ -2,7 +2,9 @@ name: ICS
 
 
 services:
+
   hil1:
+    image: localhost:5000/hil
     build:
       context: ./hil
       dockerfile: Dockerfile
@@ -15,8 +17,9 @@ services:
     environment:
     - plc=1
     network_mode: service:ziti-tunneler-hil1
-    pull_policy: never
+
   hil2:
+    image: localhost:5000/hil
     build:
       context: ./hil
       dockerfile: Dockerfile
@@ -29,8 +32,9 @@ services:
     environment:
     - plc=2
     network_mode: service:ziti-tunneler-hil2
-    pull_policy: never
+
   hil3:
+    image: localhost:5000/hil
     build:
       context: ./hil
       dockerfile: Dockerfile
@@ -43,8 +47,9 @@ services:
     environment:
     - plc=3
     network_mode: service:ziti-tunneler-hil3
-    pull_policy: never
+
   hil4:
+    image: localhost:5000/hil
     build:
       context: ./hil
       dockerfile: Dockerfile
@@ -57,9 +62,9 @@ services:
     environment:
     - plc=4
     network_mode: service:ziti-tunneler-hil4
-    pull_policy: never
 
   plc1:
+    image: localhost:5000/plc
     build:
       context: ./plc
       dockerfile: Dockerfile
@@ -80,8 +85,9 @@ services:
       timeout: 1s
       retries: 30
       start_period: 5s
-    pull_policy: never
+
   plc2:
+    image: localhost:5000/plc
     build:
       context: ./plc
       dockerfile: Dockerfile
@@ -102,8 +108,9 @@ services:
       timeout: 1s
       retries: 30
       start_period: 5s
-    pull_policy: never
+
   plc3:
+    image: localhost:5000/plc
     build:
       context: ./plc
       dockerfile: Dockerfile
@@ -124,8 +131,9 @@ services:
       timeout: 1s
       retries: 30
       start_period: 5s
-    pull_policy: never
+
   plc4:
+    image: localhost:5000/plc
     build:
       context: ./plc
       dockerfile: Dockerfile
@@ -146,9 +154,9 @@ services:
       timeout: 1s
       retries: 30
       start_period: 5s
-    pull_policy: never
 
   scada:
+    image: localhost:5000/scada
     build:
       context: ./scada
       dockerfile: Dockerfile
@@ -167,7 +175,6 @@ services:
     volumes:
     - scada:/opt/ScadaBR/tomcat/webapps/ScadaBR/db
     network_mode: service:ziti-tunneler-scada
-    pull_policy: never
 
 
 networks:

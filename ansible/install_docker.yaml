@@ -1,0 +1,16 @@
+- name: install docker
+  hosts: all
+  become: true
+
+  tasks:
+    - name: install
+      apt:
+        name:
+          - docker.io
+        update-cache: yes
+        state: present
+    - name: Enable
+      systemd:
+        name: docker
+        enabled: yes
+        state: started

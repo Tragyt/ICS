@@ -1,0 +1,16 @@
+- name: start docker containers
+  hosts: plc_arm
+  become: true
+  collections:
+    - community.docker
+
+  tasks:
+    - name: pull images
+      community.docker.docker_image_pull:
+        name: 192.168.69.1:5000/plc
+    - name: start container
+      community.docker.docker_container:
+        name: plc
+        image: 192.168.69.1:5000/plc
+        state: started
+        restart_policy: always

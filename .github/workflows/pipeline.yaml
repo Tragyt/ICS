@@ -152,8 +152,14 @@ jobs:
       steps:
         - name: Checkout repo
           uses: actions/checkout@v6
-        - name: Build and push
-          run: |
-            cp .env.example .env;
-            docker compose build
-            docker compose push
+        # - name: Build and push
+        #   run: |
+        #     cp .env.example .env;
+        #     docker buildx build --platform linux/arm64 -t localhost:5000/plc:arm64 ./plc --load
+        #     docker buildx build --platform linux/arm64 -t localhost:5000/arm:arm64 ./hil --load
+        #     docker buildx build --platform linux/arm64 -t localhost:5000/sensor:arm64 ./sensor --load
+
+        #     docker compose up registry
+        #     docker push localhost:5000/plc:arm64  
+        #     docker push localhost:5000/arm:arm64  
+        #     docker push localhost:5000/sensor:arm64

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ziti edge login https://ziti-edge-controller:"${ZITI_CTRL_EDGE_ADVERTISED_PORT}" \
+ziti edge login https://"${ZITI_CTRL_EDGE_ADVERTISED_ADDRESS}":"${ZITI_CTRL_EDGE_ADVERTISED_PORT}" \
     --username="${ZITI_USER}" \
     --password="${ZITI_PWD}" \
     --yes 

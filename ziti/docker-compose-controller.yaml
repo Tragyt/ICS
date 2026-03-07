@@ -1,0 +1,53 @@
+services:
+  ziti-controller:
+    image: ${ZITI_IMAGE}:${ZITI_VERSION}
+    container_name: ziti-controller
+    volumes:
+      - ziti-ctrl:/persistent
+    environment:
+      - ZITI_CTRL_NAME=${ZITI_CTRL_NAME:-ziti-edge-controller}
+      - ZITI_CTRL_EDGE_ADVERTISED_ADDRESS=${ZITI_CTRL_EDGE_ADVERTISED_ADDRESS:-ziti-edge-controller}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-1280}
+      - ZITI_CTRL_EDGE_IP_OVERRIDE=${ZITI_CTRL_EDGE_IP_OVERRIDE:-127.0.0.1}
+      - ZITI_CTRL_ADVERTISED_PORT=${ZITI_CTRL_ADVERTISED_PORT:-6262}
+      - ZITI_EDGE_IDENTITY_ENROLLMENT_DURATION=${ZITI_EDGE_IDENTITY_ENROLLMENT_DURATION}
+      - ZITI_ROUTER_ENROLLMENT_DURATION=${ZITI_ROUTER_ENROLLMENT_DURATION}
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+    env_file:
+      - ./.env
+    ports:
+      - target: ${ZITI_CTRL_ADVERTISED_PORT:-6262}
+        published: ${ZITI_CTRL_ADVERTISED_PORT:-6262}
+        host_ip: ${ZITI_INTERFACE:-0.0.0.0}
+      - target: ${ZITI_CTRL_EDGE_ADVERTISED_PORT:-1280}
+        published: ${ZITI_CTRL_EDGE_ADVERTISED_PORT:-1280}
+        host_ip: ${ZITI_INTERFACE:-0.0.0.0}
+    entrypoint:
+      - /var/openziti/scripts/run-controller.sh
+    healthcheck:
+      test: curl -m 1 -s -k -f https://${ZITI_CTRL_EDGE_ADVERTISED_ADDRESS:-ziti-edge-controller}:${ZITI_CTRL_EDGE_ADVERTISED_PORT:-1280}/edge/client/v1/version
+      interval: 1s
+      timeout: 3s
+      retries: 30
+      start_period: 60s
+
+  ziti-controller-init-container:
+    image: ${ZITI_IMAGE}:${ZITI_VERSION}
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    volumes:
+      - ziti-ctrl:/persistent
+    environment:
+      - ZITI_CTRL_EDGE_ADVERTISED_ADDRESS=${ZITI_CTRL_EDGE_ADVERTISED_ADDRESS:-ziti-edge-controller}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-1280}
+    env_file:
+      - ./.env
+    command:
+      - /var/openziti/scripts/access-control.sh
+    entrypoint:
+      - /var/openziti/scripts/run-with-ziti-cli.sh
+
+volumes:
+  ziti-ctrl: null

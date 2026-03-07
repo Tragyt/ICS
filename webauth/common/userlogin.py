@@ -13,7 +13,8 @@ userlogin = Blueprint('userlogin', __name__)
 
 
 def _hostname():
-    return str(urlparse(request.host_url).hostname)
+    #return str(urlparse(request.host_url).hostname)
+    return "rpi.userhandler"
 
 
 @userlogin.route('/autentication-options', methods=['POST'])

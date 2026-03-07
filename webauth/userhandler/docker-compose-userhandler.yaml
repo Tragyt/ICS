@@ -1,0 +1,18 @@
+
+services:
+
+  user_handler:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: user_handler
+    volumes:
+      - ./app/migrations:/app/userhandler/app/migrations
+    environment:
+      DATABASE_ADDRESS: ${DATABASE_ADDRESS}
+      DATABASE_URL: postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_ADDRESS}:5432/app
+      SECRET_KEY: ${SECRET_KEY}
+      ADMIN_INIT_TOKEN: ${ADMIN_INIT_TOKEN}
+      PYTHONPATH: /app/userhandler
+    ports:
+      - "5000:5000"

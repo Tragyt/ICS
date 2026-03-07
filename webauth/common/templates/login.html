@@ -55,7 +55,7 @@
                     token = result.token;
 
                     let webauthn_response;
-                    webauthn_response = await SimpleWebAuthnBrowser.startRegistration(jsonOptions);
+                    webauthn_response = await SimpleWebAuthnBrowser.startRegistration({ optionsJSON: jsonOptions});
 
                     const verifyResponse = await fetch('/usermanagement/verify-setup-user', {
                         method: 'POST',
@@ -91,7 +91,7 @@
 
                 let asseResp;
                 try {
-                    asseResp = await startAuthentication(jsonOptions);
+                    asseResp = await startAuthentication({ optionsJSON: jsonOptions});
                 } catch (error) {
                     alert("Qualcosa è andato storto");
                     console.error(error)
@@ -120,7 +120,7 @@
                 
             }
         } catch (error) {
-            errorDiv.textContent = 'Autenticazione fallita';
+            errorDiv.textContent = 'Autenticazione fallita ' + error;
             errorDiv.classList.remove('hidden');
         }
     });

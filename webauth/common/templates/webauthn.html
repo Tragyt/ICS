@@ -28,12 +28,13 @@
             });
 
             const result = await response.json();
+            console.log(result)
             if (response.ok) {
                 user_id = result.user_id;
                 jsonOptions = JSON.parse(result.publicCredentialCreationOptions);
 
                 let webauthn_response;
-                webauthn_response = await SimpleWebAuthnBrowser.startRegistration(jsonOptions);
+                webauthn_response = await SimpleWebAuthnBrowser.startRegistration({ optionsJSON: jsonOptions});
                 
                 const verifyResponse = await fetch(VERIFY_SAVE_CREDENTIAL_URL, {
                     method: 'POST',

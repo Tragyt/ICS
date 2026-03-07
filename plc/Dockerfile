@@ -17,6 +17,7 @@ COPY setup.sh /home/openplc
 COPY start_plc.py /home/openplc
 COPY run.sh /home/openplc
 
+
 RUN chmod +x /home/openplc/setup.sh \
     && /home/openplc/setup.sh \
     && chmod +x /home/openplc/run.sh 

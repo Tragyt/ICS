@@ -1,0 +1,10 @@
+- name: restart all 
+  hosts: all
+  become: true
+  ignore_unreachable: yes
+  tasks:
+    - name: disable NTP
+      ansible.builtin.command: timedatectl set-ntp false
+
+    - name: enable NTP
+      ansible.builtin.command: timedatectl set-ntp true

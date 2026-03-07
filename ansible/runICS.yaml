@@ -1,0 +1,285 @@
+- name: ziti controller
+  hosts: controller
+  ignore_unreachable: yes
+  tasks:
+    - name: run ziti controller
+      community.docker.docker_compose_v2:
+        project_src: /home/aces/ziti
+        state: present
+      tags: 
+        - start_secure
+    - name: stop ziti controller
+      community.docker.docker_compose_v2:
+        project_src: /home/aces/ziti
+        state: absent
+      tags: 
+        - stop
+
+- name: ziti router
+  hosts: router
+  ignore_unreachable: yes
+  tasks:
+    - name: wait controller 
+      community.docker.docker_container_info:
+        name: ziti-controller
+      register: controller_info
+      delegate_to: controller
+      until: >
+        controller_info.container is defined and
+        controller_info.container.State.Health is defined and
+        controller_info.container.State.Health.Status == "healthy"
+      retries: 60
+      delay: 5
+      tags: 
+        - start_secure
+    - name: create router
+      ansible.builtin.command: /home/aces/ziti/create_router.sh
+      args:
+        chdir: /home/aces/ziti
+        creates: /home/aces/ziti/ziti-router.jwt
+      tags: 
+        - start_secure
+    - name: stop container
+      community.docker.docker_compose_v2:
+        project_src: /home/aces/ziti
+        state: absent
+      tags: 
+        - stop
+    - name: run container
+      ansible.builtin.shell: ZITI_ENROLL_TOKEN="$(cat /home/aces/ziti/ziti-router.jwt)" docker compose up -d
+      args:
+        chdir: /home/aces/ziti
+      tags: 
+        - start_secure
+
+- name: ziti tunnelers
+  hosts: tunneler
+  ignore_unreachable: yes
+  tasks:
+    - name: wait router 
+      community.docker.docker_container_info:
+        name: ziti-router
+      register: router_info
+      delegate_to: router
+      until: >
+        router_info.container is defined and
+        router_info.container.State.Health is defined and
+        router_info.container.State.Health.Status == "healthy"
+      retries: 60
+      delay: 5
+      tags: 
+        - start_secure
+    - name: create identity
+      ansible.builtin.command: /home/aces/ziti/setup_tunneler.sh
+      args:
+        creates: /opt/openziti/etc/identities/{{identity}}.jwt
+      environment:
+        IDENTITY: "{{identity | default(\"default\")}}"
+        PLC: "{{plc_ziti | default(0)}}"
+        TYPE: "{{type | default(\"default\")}}"
+      tags:
+        - start_secure
+      become: true
+    - name: start tunneler
+      ansible.builtin.systemd:
+        name: ziti-edge-tunnel.service
+        enabled: false
+        state: started
+      become: true
+      tags:
+        - start_secure
+    - name: stop tunneler
+      ansible.builtin.systemd:
+        name: ziti-edge-tunnel.service
+        enabled: false
+        state: stopped
+      become: true
+      tags:
+        - stop 
+        - start 
+
+- name: start plc
+  hosts: plc
+  become: true
+  ignore_unreachable: yes
+  tasks:
+    - name: Start openplc
+      ansible.builtin.shell: ./run.sh
+      args:
+        chdir: /home/aces/openplc
+      environment:
+        OPENPLC_ADMIIN: openplc
+        OPENPLC_PASSWORD: openplc
+      tags: 
+        - start
+        - start_secure
+    - name: accept only proxy traffic
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: 502
+        in_interface: lo
+        jump: ACCEPT
+        state: present
+      tags: start_secure
+    - name: block all other traffic
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: 502
+        jump: DROP
+        state: present
+      tags: start_secure
+    - name: deactivate firewall rules
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: 502
+        jump: DROP
+        state: absent
+      tags: start
+
+- name: arm
+  hosts: arm
+  become: true
+  ignore_unreachable: yes
+  tasks:
+    - name: start script
+      command: /home/aces/venv/bin/python3 /home/aces/hil.py
+      async: 86400
+      poll: 0
+      environment:
+        PLC_ADDRESS: "{{plc_address}}"
+      tags: 
+        - start
+        - start_secure
+    - name: stop script
+      shell: |
+        pkill -f /home/aces/hil.py
+      ignore_errors: yes
+      tags: stop
+
+- name: color sensor
+  hosts: arm1
+  become: true
+  ignore_unreachable: yes
+  tasks:
+    - name: start script
+      command: /home/aces/color_sensor/venv/bin/python3 /home/aces/color_sensor/main.py
+      async: 86400
+      poll: 0
+      environment:
+        PLC_ADDRESS: "192.168.69.{{plc}}"
+      tags: 
+        - start
+        - start_secure
+    - name: stop script
+      shell: |
+        pkill -f /home/aces/color_sensor/main.py
+      ignore_errors: yes
+      tags: stop
+
+- name: convejor
+  hosts: convejor
+  become: true
+  ignore_unreachable: yes
+  tasks:
+    - name: start convejor
+      command: /home/aces/venv/bin/python3 /home/aces/convejor.py
+      async: 86400
+      poll: 0
+      environment:
+        PLC_ADDRESS: "{{plc_address}}"
+      tags: 
+        - start
+        - start_secure
+    - name: show PLC_ADDRESS
+      debug:
+        var: plc_address
+      tags: 
+        - start
+        - start_secure
+    - name: kill convejor.py
+      shell: |
+        pkill -f /home/aces/convejor.py
+      ignore_errors: yes
+      tags: stop
+
+- name: start scada
+  hosts: scada
+  ignore_unreachable: yes
+  tasks:
+    - name: run scada container
+      community.docker.docker_compose_v2:
+        project_src: /home/aces/scada
+        state: present
+      tags: 
+        - start
+        - start_secure
+    - name: stop scada container
+      community.docker.docker_compose_v2:
+        project_src: /home/aces/scada
+        state: absent
+      tags: stop
+
+- name: db
+  hosts: db
+  ignore_unreachable: yes
+  tasks:
+    - name: run db container
+      community.docker.docker_compose_v2:
+        project_src: /home/aces/db
+        state: present
+      tags:
+        - start
+        - start_secure
+    - name: stop db container
+      community.docker.docker_compose_v2:
+        project_src: /home/aces/db
+        state: absent
+      tags: stop
+    - name: accept only proxy traffic
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: 5432
+        in_interface: lo
+        jump: ACCEPT
+        state: present
+      become: true
+      tags: start_secure
+    - name: block all other traffic
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: 5432
+        jump: DROP
+        state: present
+      become: true
+      tags: start_secure
+    - name: deactivate firewall rules
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: 5432
+        jump: DROP
+        state: absent
+      become: true
+      tags: start
+
+- name: userhandler
+  hosts: userhandler
+  ignore_unreachable: yes
+  tasks:
+    - name: run userhandler container
+      ansible.builtin.shell: DATABASE_ADDRESS="{{db_address}}" docker compose up -d
+      args:
+        chdir: /home/aces/userhandler
+      tags: 
+        - start
+        - start_secure
+    - name: stop userhandler container
+      community.docker.docker_compose_v2:
+        project_src: /home/aces/userhandler
+        state: absent
+      tags: stop

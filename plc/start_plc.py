@@ -16,5 +16,5 @@ login = {"username": os.getenv("OPENPLC_ADMIIN"), "password": os.getenv(
 s.post("http://localhost:8080/login", data=login)
 s.get("http://localhost:8080/compile-program?file=arm_plc.st")
 
-time.sleep(10)
+time.sleep(20)
 s.get("http://localhost:8080/start_plc")

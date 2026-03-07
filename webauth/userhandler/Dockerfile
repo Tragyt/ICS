@@ -7,14 +7,14 @@ RUN apt-get update && apt-get install --no-install-recommends -y postgresql-clie
 
 WORKDIR /app
 
-COPY ./webauth/userhandler/app ./userhandler/app
-COPY ./webauth/common/templates/ ./userhandler/app/templates/
-COPY ./webauth/common/*.py ./userhandler/common/ 
+COPY ./app ./userhandler/app
+COPY ./common/templates/ ./userhandler/app/templates/
+COPY ./common/*.py ./userhandler/common/ 
 
-COPY ./webauth/userhandler/requirements.txt .
+COPY ./requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./webauth/userhandler/entrypoint.sh /tmp/entrypoint.sh
+COPY ./entrypoint.sh /tmp/entrypoint.sh
 RUN chmod +x /tmp/entrypoint.sh
 
 WORKDIR /app/userhandler/app/

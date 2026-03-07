@@ -3,3 +3,7 @@
 scada/scadabrDB/
 
 __pycache__/
+
+venv/
+
+*.pem

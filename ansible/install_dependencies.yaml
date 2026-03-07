@@ -1,0 +1,355 @@
+- name: install openplc
+  hosts: plc
+  become: yes
+  ignore_unreachable: yes
+  tasks:
+    - name: Install dependencies
+      apt:
+        name:
+          - python3-pip
+        update-cache: yes
+        state: present
+    - name: Clone repo
+      git:
+        repo: "https://github.com/thiagoralves/OpenPLC_v3.git"
+        dest: "/home/aces/openplc/OpenPLC_v3"
+        update: false
+    - name: install openplc
+      command: ./install.sh rpi
+      args:
+        chdir: /home/aces/openplc/OpenPLC_v3
+        creates: /home/aces/openplc/OpenPLC_v3/start_openplc.sh
+      register: openplc
+    - name: copy files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: '0755'
+      loop:
+        - { src: '../plc/run.sh', dest: '/home/aces/openplc/run.sh' }
+        - { src: '../plc/setup.sh', dest: '/home/aces/openplc/setup.sh' }
+        - { src: '../plc/start_plc.py', dest: '/home/aces/openplc/start_plc.py' }
+        - { src: '../plc/arm_plc.st', dest: '/home/aces/openplc/arm_plc.st'}
+        - { src: '../plc/requirements.txt', dest: '/home/aces/openplc/requirements.txt'}
+    - name: Create venv
+      ansible.builtin.command:
+        cmd: python3 -m venv /home/aces/openplc/venv
+        creates: /home/aces/openplc/venv/bin/activate
+    - name: Install requirements
+      pip:
+        requirements: /home/aces/openplc/requirements.txt
+        virtualenv: /home/aces/openplc/venv
+        virtualenv_python: python3
+    - name: Setup openplc
+      command: ./setup.sh
+      args:
+        chdir: /home/aces/openplc
+        creates: /home/aces/openplc/OpenPLC_v3/webserver/st_files/arm_plc.st
+    
+- name: install arm dependencies
+  hosts: arm
+  ignore_unreachable: yes
+  tasks:
+    - name: copy files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: '0755'
+      loop:
+        - { src: '../hil/hil.py', dest: '/home/aces/hil.py' }
+        - { src: '../hil/requirements.txt', dest: '/home/aces/requirements.txt'}
+    - name: Create venv
+      ansible.builtin.command:
+        cmd: python3 -m venv /home/aces/venv
+        creates: /home/aces/venv/bin/activate
+    - name: Install requirements
+      command: /home/aces/venv/bin/pip install -r /home/aces/requirements.txt
+
+
+- name: color sensor
+  hosts: arm1
+  ignore_unreachable: yes
+  tasks:
+    - name: install build dependencies
+      apt:
+        name:
+          - python3-dev
+          - build-essential
+          - gcc
+        state: present
+        update_cache: yes
+      become: yes
+    - name: check if i2c is enabled
+      shell: grep "dtparam=i2c_arm=on" /boot/firmware/config.txt
+      register: i2c_status
+      become: yes
+    # - name: debug i2c_status
+    #   debug:
+    #     var: i2c_status
+    - name: enable i2c
+      command: raspi-config nonint do_i2c 0
+      when: i2c_status.rc is defined and i2c_status.rc != 0
+      become: yes
+    - name: copy files
+      copy:
+        src: '../hil/color_sensor'
+        dest: '/home/aces/'
+    - name: Create venv
+      ansible.builtin.command:
+        cmd: python3 -m venv /home/aces/color_sensor/venv
+        creates: /home/aces/color_sensor/venv/bin/activate
+    - name: install requirements
+      command: /home/aces/color_sensor/venv/bin/pip install -r /home/aces/color_sensor/requirements.txt
+    - name: Reboot the system
+      reboot:
+        reboot_timeout: 300
+      when: i2c_status.rc is defined and i2c_status.rc != 0
+
+- name: convejor rpi dependencies
+  hosts: convejor
+  ignore_unreachable: yes
+  tasks:
+    - name: copy files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: '0755'
+      loop:
+        - { src: '../hil/convejor/rpi4.py', dest: '/home/aces/convejor.py' }
+        - { src: '../hil/convejor/requirements.txt', dest: '/home/aces/requirements.txt'}
+    - name: create venv
+      ansible.builtin.command:
+        cmd: python3 -m venv /home/aces/venv
+        creates: /home/aces/venv/bin/activate
+    - name: install requirements
+      command: /home/aces/venv/bin/pip install -r /home/aces/requirements.txt
+
+- name: install docker
+  hosts: [scada,controller,router,db,userhandler,logingateway]
+  become: yes
+  ignore_unreachable: yes
+  tasks:
+    - name: get docker install script
+      get_url:
+        url: https://get.docker.com
+        dest: /home/aces/get-docker.sh
+        mode: '0755'
+    - name: install docker
+      command: /home/aces/get-docker.sh
+      args: 
+        creates: /usr/bin/docker
+    - name: add aces to docker group
+      user:
+        name: aces
+        groups: docker
+        append: yes
+
+- name: scada
+  hosts: scada
+  ignore_unreachable: yes
+  tasks:
+    - name: copy files
+      copy:
+        src: '../scada'
+        dest: '/home/aces/'
+
+- name: ziti setup
+  hosts: ziti
+  ignore_unreachable: yes
+  tasks:
+    - name: ensure /home/aces/ziti exists
+      ansible.builtin.file:
+        path: /home/aces/ziti
+        state: directory
+        owner: aces
+        group: aces
+        mode: '0755'      
+    - name: download ziti install script
+      get_url:
+        url: https://get.openziti.io/install.bash
+        dest: /tmp/install_openziti.sh
+        mode: '0755'
+      become: true
+    - name: install ziti cli
+      command: /tmp/install_openziti.sh openziti
+      args:
+        creates: /usr/local/bin/ziti 
+      become: true
+
+- name: ziti controller
+  hosts: controller
+  become: true
+  ignore_unreachable: yes
+  tasks:
+    - name: copy files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: '0755'
+      loop:
+        - { src: '../ziti/docker-compose-controller.yaml', dest: '/home/aces/ziti/docker-compose.yaml' }
+        - { src: '../ziti/.env.ziti', dest: '/home/aces/ziti/.env'}
+
+- name: ziti router
+  hosts: router
+  become: true
+  ignore_unreachable: yes
+  tasks:
+    - name: copy files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: '0755'
+      loop:
+        - { src: '../ziti/docker-compose-router.yaml', dest: '/home/aces/ziti/docker-compose.yaml' }
+        - { src: '../ziti/.env.ziti', dest: '/home/aces/ziti/.env'}
+        - { src: '../ziti/create_router.sh', dest: '/home/aces/ziti/create_router.sh'}
+
+- name: ziti modbus tunnelers
+  hosts: [plc1_tunneler,plc2_tunneler,convejor1_tunneler,convejor2_tunneler,arm1_tunneler,arm2_tunneler,scada_tunneler]
+  ignore_unreachable: yes
+  tasks:
+    - name: copy files
+      copy:
+        src: '../ziti/setup_tunneler.sh'
+        dest: '/home/aces/ziti/setup_tunneler.sh'
+        mode: '0755'  
+
+- name: ziti db tunneler
+  hosts: db_tunneler
+  ignore_unreachable: yes
+  tasks:
+    - name: copy files
+      copy:
+        src: '../ziti/setup_db_tunneler.sh'
+        dest: '/home/aces/ziti/setup_tunneler.sh'
+        mode: '0755'
+
+- name: ziti userhandler tunneler
+  hosts: userhandler_tunneler
+  ignore_unreachable: yes
+  tasks:
+    - name: copy files
+      copy:
+        src: '../ziti/setup_userhandler_tunneler.sh'
+        dest: '/home/aces/ziti/setup_tunneler.sh'
+        mode: '0755'
+
+- name: ziti tunnelers
+  hosts: tunneler
+  ignore_unreachable: yes
+  tasks:
+    - name: copy files
+      copy:
+        src: '../ziti/.env.ziti'
+        dest: '/home/aces/ziti/.env'
+        mode: '0755'
+    - name: add OpenZiti apt repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/openziti.gpg] https://packages.openziti.org/zitipax-openziti-deb-stable jammy main"
+        filename: openziti
+        state: present
+      become: true
+    - name: download OpenZiti repository key
+      ansible.builtin.get_url:
+        url: https://get.openziti.io/tun/package-repos.gpg
+        dest: /tmp/openziti.gpg
+        mode: '0644'
+      become: true
+    - name: add key to keyring
+      ansible.builtin.command:
+        cmd: gpg --dearmor --yes --output /usr/share/keyrings/openziti.gpg /tmp/openziti.gpg
+      args:
+        creates: /usr/share/keyrings/openziti.gpg
+      become: true
+    - name: ensure key permissions
+      ansible.builtin.file:
+        path: /usr/share/keyrings/openziti.gpg
+        mode: '0644'
+      become: true
+    - name: install ziti-edge-tunnel
+      ansible.builtin.apt:
+        name: ziti-edge-tunnel
+        state: present
+        update_cache: yes
+      become: true
+    - name: create systemd override directory
+      file:
+        path: /etc/systemd/system/ziti-edge-tunnel.service.d
+        state: directory
+        mode: '0755'
+      become: true
+    - name: override service to run as root
+      copy:
+        dest: /etc/systemd/system/ziti-edge-tunnel.service.d/override.conf
+        content: |
+          [Service]
+          User=
+        mode: '0644'
+      register: override
+      become: true
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+      become: true
+      when: override.changed
+
+- name: db
+  hosts: db
+  ignore_unreachable: yes
+  tasks:
+    - name: create db directory
+      ansible.builtin.file:
+        path: /home/aces/db
+        state: directory
+        owner: aces
+        group: aces
+        mode: '0755'    
+    - name: copy files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: '0755'
+      loop:
+        - { src: '../webauth/userhandler/.env.db', dest: '/home/aces/db/.env'}
+        - { src: '../webauth/userhandler/docker-compose-db.yaml', dest: '/home/aces/db/docker-compose.yaml'}    
+
+- name: userhandler
+  hosts: userhandler
+  ignore_unreachable: yes
+  tasks:
+    - name: create userhandler directory
+      ansible.builtin.file:
+        path: /home/aces/userhandler
+        state: directory
+        owner: aces
+        group: aces
+        mode: '0755'
+    - name: copy files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: '0755'
+      loop:
+        - { src: '../webauth/userhandler/.env.userhandler', dest: '/home/aces/userhandler/.env'}
+        - { src: '../webauth/userhandler/docker-compose-userhandler.yaml', dest: '/home/aces/userhandler/docker-compose.yaml'}    
+        - { src: '../webauth/userhandler/Dockerfile', dest: '/home/aces/userhandler/Dockerfile'}
+        - { src: '../webauth/userhandler/app', dest: '/home/aces/userhandler/'}
+        - { src: '../webauth/common', dest: '/home/aces/userhandler/'}
+        - { src: '../webauth/userhandler/entrypoint.sh', dest: '/home/aces/userhandler/entrypoint.sh'}
+        - { src: '../webauth/userhandler/requirements.txt', dest: '/home/aces/userhandler/requirements.txt'}
+        - { src: '../webauth/userhandler/rpi.userhandler-key.pem', dest: '/home/aces/userhandler/app/rpi.userhandler-key.pem'}
+        - { src: '../webauth/userhandler/rpi.userhandler.pem', dest: '/home/aces/userhandler/app/rpi.userhandler.pem'}
+
+- name: logingateway
+  hosts: logingateway
+  ignore_unreachable: yes
+  tasks:
+    - name: create logingateway directory
+      ansible.builtin.file:
+        path: /home/aces/logingateway
+        state: directory
+        owner: aces
+        group: aces
+        mode: '0755'
+    - name: copy files

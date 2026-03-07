@@ -1,0 +1,13 @@
+services:
+  scada:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scada
+    volumes:
+      - scada:/opt/ScadaBR/tomcat/webapps/ScadaBR/db
+    ports:
+      - 8080:8080
+
+volumes:
+  scada: null

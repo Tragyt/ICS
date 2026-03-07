@@ -1,0 +1,12 @@
+
+plc_address_base: "192.168.69.{{ plc }}"
+plc_address_secure: "plc{{ plc_ziti }}.ziti"
+plc_address: >-
+  {{ plc_address_secure if 'start_secure' in ansible_run_tags else plc_address_base }}
+
+db_address_base: "192.168.69.11"
+db_address_secure: "db.ziti"
+db_address: >-
+  {{ db_address_secure if 'start_secure' in ansible_run_tags else db_address_base }}
+
+default: "default"

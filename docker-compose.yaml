@@ -4,7 +4,6 @@ name: ICS
 services:
 
   hil1:
-    image: localhost:5000/hil
     build:
       context: ./hil
       dockerfile: Dockerfile
@@ -19,7 +18,6 @@ services:
     network_mode: service:ziti-tunneler-hil1
 
   hil2:
-    image: localhost:5000/hil
     build:
       context: ./hil
       dockerfile: Dockerfile
@@ -34,7 +32,6 @@ services:
     network_mode: service:ziti-tunneler-hil2
 
   hil3:
-    image: localhost:5000/hil
     build:
       context: ./hil
       dockerfile: Dockerfile
@@ -49,7 +46,6 @@ services:
     network_mode: service:ziti-tunneler-hil3
 
   hil4:
-    image: localhost:5000/hil
     build:
       context: ./hil
       dockerfile: Dockerfile
@@ -64,7 +60,6 @@ services:
     network_mode: service:ziti-tunneler-hil4
 
   plc1:
-    image: localhost:5000/plc
     build:
       context: ./plc
       dockerfile: Dockerfile
@@ -87,7 +82,6 @@ services:
       start_period: 5s
 
   plc2:
-    image: localhost:5000/plc
     build:
       context: ./plc
       dockerfile: Dockerfile
@@ -110,7 +104,6 @@ services:
       start_period: 5s
 
   plc3:
-    image: localhost:5000/plc
     build:
       context: ./plc
       dockerfile: Dockerfile
@@ -133,7 +126,6 @@ services:
       start_period: 5s
 
   plc4:
-    image: localhost:5000/plc
     build:
       context: ./plc
       dockerfile: Dockerfile
@@ -156,7 +148,6 @@ services:
       start_period: 5s
 
   scada:
-    image: localhost:5000/scada
     build:
       context: ./scada
       dockerfile: Dockerfile

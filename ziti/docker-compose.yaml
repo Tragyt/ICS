@@ -551,10 +551,10 @@ services:
       ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-tproxy}
       ZITI_AUTO_RENEW_CERTS: true
       ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}
-    ports:
-      - target: 8080
-        published: 8080
-        host_ip: 127.0.0.1 
+    # ports:
+    #   - target: 8080
+    #     published: 8080
+    #     host_ip: 127.0.0.1 
     networks:
       - ziti
     command: run config.yml
@@ -598,6 +598,103 @@ services:
       - /bootstrap.sh
     user: root
 
+  ziti-tunneler-logingateway:
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router:1.6.12}
+    container_name: ziti-tunneler-logingateway
+    depends_on:
+      ziti-tunneler-logingateway-init:
+        condition: service_completed_successfully
+    volumes:
+      - ziti-logingateway:/ziti-router
+      - ./ziti/enroll.sh:/ziti-router/enroll.sh
+    environment:
+      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}
+      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-logingateway}
+      ZITI_ROUTER_PORT: ${ZITI_ROUTER_PORT:-3022}
+      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-tproxy}
+      ZITI_AUTO_RENEW_CERTS: true
+      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}
+    networks:
+      - ziti
+    command: run config.yml
+    entrypoint:
+      - /ziti-router/enroll.sh
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - ziti
+        - agent
+        - stats
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    user: root
+    cap_add:
+      - NET_ADMIN
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+
+  ziti-tunneler-scada-host:
+    image: ${ZITI_ROUTER_IMAGE:-openziti/ziti-router:1.6.12}
+    container_name: ziti-tunneler-scada-host
+    depends_on:
+      ziti-tunneler-scada-host-init:
+        condition: service_completed_successfully
+    volumes:
+      - ziti-scada-host:/ziti-router
+      - ./ziti/enroll.sh:/ziti-router/enroll.sh
+    environment:
+      ZITI_CTRL_ADVERTISED_ADDRESS: ${ZITI_CTRL_ADVERTISED_ADDRESS:-}
+      ZITI_CTRL_ADVERTISED_PORT: ${ZITI_CTRL_ADVERTISED_PORT:-}
+      ZITI_ROUTER_ADVERTISED_ADDRESS: ${ZITI_ROUTER_ADVERTISED_ADDRESS:-ziti-tunneler-scada-host}
+      ZITI_ROUTER_PORT: 3032
+      ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-host}
+      ZITI_BOOTSTRAP: true
+      ZITI_BOOTSTRAP_CONFIG: true
+      ZITI_BOOTSTRAP_ENROLLMENT: true
+      ZITI_AUTO_RENEW_CERTS: true
+      ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}
+      ZITI_BOOTSTRAP_CONFIG_ARGS: null
+    network_mode: service:ziti-tunneler-scada
+    command: run config.yml
+    entrypoint:
+      - /ziti-router/enroll.sh
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - ziti
+        - agent
+        - stats
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    user: ${ZIGGY_UID:-2171}
+
+  ziti-tunneler-scada-host-init:
+    image: openziti/ziti-cli:1.6.12
+    container_name: ziti-tunneler-scada-host-init
+    depends_on:
+      ziti-controller:
+        condition: service_healthy
+    volumes:
+      - ziti-scada-host:/ziti-router
+      - ./ziti/bootstrap_tunneler_scada_host.sh:/bootstrap.sh
+    environment:
+      - ZITI_USER=${ZITI_USER:-admin}
+      - ZITI_PWD=${ZITI_PWD}
+      - ZITI_CTRL_EDGE_ADVERTISED_PORT=${ZITI_CTRL_EDGE_ADVERTISED_PORT:-}
+    networks:
+      - ziti
+    entrypoint:
+      - /bin/sh
+      - /bootstrap.sh
+
 
 volumes:
   ziti-ctrl: null
@@ -610,3 +707,4 @@ volumes:
   ziti-client3: null
   ziti-client4: null
   ziti-scada: null
+  ziti-scada-host: null

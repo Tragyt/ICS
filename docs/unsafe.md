@@ -3,8 +3,6 @@
 This configuration represents a fully virtualized Industrial Control System (ICS) network without security mechanisms.
 All components are deployed as Docker containers connected through a Docker network.
 
-The environment is intentionally insecure and is designed to demonstrate common weaknesses found in legacy industrial networks.
-
 ## Architecture
 
 ### HIL (Hardware-in-the-Loop)
@@ -43,26 +41,35 @@ direction LR
 
 PLC1[PLC1]
 HIL1[HIL1]
+HIL1 --> PLC1
 PLC1 --- HIL1
 
 PLC2[PLC2]
 HIL2[HIL2]
+HIL2 --> PLC2
 PLC2 --- HIL2
 
 PLC3[PLC3]
 HIL3[HIL3]
+HIL3 --> PLC3
 PLC3 --- HIL3
 
 PLC4[PLC4]
 HIL4[HIL4]
+HIL4 --> PLC4
 PLC4 --- HIL4
 
 end
 
-SCADA --- PLC1
-SCADA --- PLC2
-SCADA --- PLC3
-SCADA --- PLC4
+SCADA --> PLC1
+SCADA --> PLC2
+SCADA --> PLC3
+SCADA --> PLC4
+
+linkStyle 1 stroke: transparent
+linkStyle 3 stroke: transparent
+linkStyle 5 stroke: transparent
+linkStyle 7 stroke: transparent
 ```
 
 ## Running the Environment

@@ -29,7 +29,7 @@ services:
       - ./webauth/userhandler/app/migrations:/app/userhandler/app/migrations
     environment:
       DATABASE_URL: postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@ziti.db:5432/app
-      SECRET_KEY: ${SECRET_KEY}
+      SECRET_KEY: ${SECRET_KEY_USERHANDLER}
       ADMIN_INIT_TOKEN: ${ADMIN_INIT_TOKEN}
       PYTHONPATH: /app/userhandler
     network_mode: service:ziti-tunneler-userhandler

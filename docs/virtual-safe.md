@@ -39,7 +39,10 @@ The following security components are implemented in the environment:
 
 ### OpenZiti
 
-The **OpenZiti** overlay network is composed of the following components:
-- **Ziti Controller**
-- **Ziti Router**
-- **Ziti Tunnelers**
+The **OpenZiti** Zero Trust overlay network is composed of the following components:
+
+- **Ziti Controller** – responsible for authentication and authorization for every connection in the network, it configures a PKI (Public Key Infrastructure) used to create TLS (Transport Layer Security ) network connections between any two pieces of the network.
+
+- **Ziti Router** – responsible for securely and reliably delivering traffic from one network node to destination, it is the entry point to the network for clients connections.
+
+- **Ziti Tunnelers** – components aware of the Ziti network, are configured as sidecar containers for each client and service. Service side tunnelers are registered on the network with a name address, Client side tunnelers provide acces to registered services.

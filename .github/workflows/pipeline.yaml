@@ -146,14 +146,14 @@ jobs:
             fi
 
 
-    deploy:
-      runs-on: self-hosted  
-      needs: [lint-pipeline,lint-python,lint-docker,lint-docker-compose,lint-shell,test-network]
-      steps:
-        - name: Checkout repo
-          uses: actions/checkout@v6
-        - name: Build and push
-          run: |
-            cp .env.example .env;
-            docker compose build
-            docker compose push
+    # deploy:
+    #   runs-on: self-hosted  
+    #   needs: [lint-pipeline,lint-python,lint-docker,lint-docker-compose,lint-shell,test-network]
+    #   steps:
+    #     - name: Checkout repo
+    #       uses: actions/checkout@v6
+    #     - name: Build and push
+    #       run: |
+    #         cp .env.example .env;
+    #         docker compose build
+    #         docker compose push

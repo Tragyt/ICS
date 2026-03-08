@@ -27,3 +27,19 @@ The following security components are implemented in the environment:
 
 **ScadaBR** web interface that monitors all PLC variables in real-time.
 
+### Userhandler
+
+**Flask** web interface for user registration, only `admin`user can access this service. The registration flow requires specifying a username for the new user, the registration is then completed by scanning a QR code with a smartphone to store the passkey on the device. 
+
+   > **Note:** During the first login, the token specified in `.env` file is required for register the `admin` user.
+
+### Logingateway
+
+**Flask** web interface for user authentication through **WebAuthn**. The login flow requires an user to enther his username, the login is then completed by scanning a QR code with a smartphone to authenticate via passkey.
+
+### OpenZiti
+
+The **OpenZiti** overlay network is composed of the following components:
+- **Ziti Controller**
+- **Ziti Router**
+- **Ziti Tunnelers**

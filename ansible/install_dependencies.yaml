@@ -105,8 +105,8 @@
         reboot_timeout: 300
       when: i2c_status.rc is defined and i2c_status.rc != 0
 
-- name: convejor rpi dependencies
-  hosts: convejor
+- name: conveyor rpi dependencies
+  hosts: conveyor
   ignore_unreachable: yes
   tasks:
     - name: copy files
@@ -115,8 +115,8 @@
         dest: "{{ item.dest }}"
         mode: '0755'
       loop:
-        - { src: '../hil/convejor/rpi4.py', dest: '/home/aces/convejor.py' }
-        - { src: '../hil/convejor/requirements.txt', dest: '/home/aces/requirements.txt'}
+        - { src: '../hil/conveyor/rpi4.py', dest: '/home/aces/conveyor.py' }
+        - { src: '../hil/conveyor/requirements.txt', dest: '/home/aces/requirements.txt'}
     - name: create venv
       ansible.builtin.command:
         cmd: python3 -m venv /home/aces/venv
@@ -206,7 +206,7 @@
         - { src: '../ziti/create_router.sh', dest: '/home/aces/ziti/create_router.sh'}
 
 - name: ziti modbus tunnelers
-  hosts: [plc1_tunneler,plc2_tunneler,convejor1_tunneler,convejor2_tunneler,arm1_tunneler,arm2_tunneler,scada_tunneler]
+  hosts: [plc1_tunneler,plc2_tunneler,conveyor1_tunneler,conveyor2_tunneler,arm1_tunneler,arm2_tunneler,scada_tunneler]
   ignore_unreachable: yes
   tasks:
     - name: copy files

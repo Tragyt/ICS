@@ -228,7 +228,7 @@ def pick_piece(braccio: Braccio, client: ModbusClient):
     client.write_single_coil(3, True)
 
 
-def pose_on_convejor(braccio: Braccio, client: ModbusClient):
+def pose_on_conveyor(braccio: Braccio, client: ModbusClient):
     braccio.rotate_right()
     braccio.wait_position()
 
@@ -292,13 +292,13 @@ try:
         run = read_coil(client,2)
         if run:
             pick = read_coil(client,4) 
-            pose_convejor = read_coil(client,5) 
+            pose_conveyor = read_coil(client,5) 
             pose_box = read_coil(client,6)
-            # print(f"{pick=}, {pose_convejor=}")
+            
             if pick:
                 pick_piece(braccio, client)
-            elif pose_convejor:
-                pose_on_convejor(braccio, client)
+            elif pose_conveyor:
+                pose_on_conveyor(braccio, client)
             elif pose_box:
                 pose_on_box(braccio, client)
         sleep(0.5)

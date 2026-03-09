@@ -11,7 +11,7 @@ services:
     environment:
       DATABASE_ADDRESS: ${DATABASE_ADDRESS}
       DATABASE_URL: postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_ADDRESS}:5432/app
-      SECRET_KEY: ${SECRET_KEY}
+      SECRET_KEY: ${SECRET_KEY_USERHANDLER}
       ADMIN_INIT_TOKEN: ${ADMIN_INIT_TOKEN}
       PYTHONPATH: /app/userhandler
     ports:

@@ -10,8 +10,8 @@ PROGRAM program0
     POSE_N AT %QX0.5 : BOOL;
     POSE_B AT %QX0.6 : BOOL;
     picked_yellow AT %QX0.7 : BOOL;
-    MOVE_CONVEJOR AT %QX0.9 : BOOL;
-    convejor_speed AT %MW0 : INT;
+    MOVE_CONVEYOR AT %QX0.9 : BOOL;
+    conveyor_speed AT %MW0 : INT;
   END_VAR
   VAR
     R_TRIG1 : R_TRIG;
@@ -28,7 +28,7 @@ PROGRAM program0
   IF NOT(is_yellow) AND NOT(piece_picked) AND piece_ready AND RUN THEN
     picked_yellow := FALSE; (*reset*)
   END_IF;
-  MOVE_CONVEJOR := NOT(piece_ready);
+  MOVE_CONVEYOR := NOT(piece_ready);
 END_PROGRAM
 
 

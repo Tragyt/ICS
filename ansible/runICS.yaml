@@ -179,13 +179,13 @@
       ignore_errors: yes
       tags: stop
 
-- name: convejor
-  hosts: convejor
+- name: conveyor
+  hosts: conveyor
   become: true
   ignore_unreachable: yes
   tasks:
-    - name: start convejor
-      command: /home/aces/venv/bin/python3 /home/aces/convejor.py
+    - name: start conveyor
+      command: /home/aces/venv/bin/python3 /home/aces/conveyor.py
       async: 86400
       poll: 0
       environment:
@@ -199,9 +199,9 @@
       tags: 
         - start
         - start_secure
-    - name: kill convejor.py
+    - name: kill conveyor.py
       shell: |
-        pkill -f /home/aces/convejor.py
+        pkill -f /home/aces/conveyor.py
       ignore_errors: yes
       tags: stop
 

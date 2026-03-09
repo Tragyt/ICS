@@ -14,14 +14,14 @@ PLC_ADDRESS = os.environ["PLC_ADDRESS"]
     {"action": "STOP"}
 """
 
-def move_convejor(ser: serial.Serial, speed):
+def move_conveyor(ser: serial.Serial, speed):
     if not (speed > 0 and speed <= 100):
         speed = 50
     cmd = {"action": "start", "speed":speed, "direction":"forward"}
     json_cmd = json.dumps(cmd)+"\n"
     ser.write(json_cmd.encode('utf-8'))
 
-def stop_convejor(ser: serial.Serial):
+def stop_conveyor(ser: serial.Serial):
     cmd = {"action":"stop"}
     json_cmd=json.dumps(cmd)+"\n"
     ser.write(json_cmd.encode('utf-8'))
@@ -62,14 +62,14 @@ try:
             if (not moving and move) or speed != current_speed:
                 moving = True
                 current_speed = speed
-                move_convejor(ser, current_speed)
+                move_conveyor(ser, current_speed)
             elif moving and not move:
                 moving = False
-                stop_convejor(ser)
+                stop_conveyor(ser)
         else:
-            stop_convejor(ser)
+            stop_conveyor(ser)
         sleep(0.2)
-    stop_convejor(ser)
+    stop_conveyor(ser)
 except Exception as e:
     print(e)
 

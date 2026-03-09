@@ -22,13 +22,13 @@ The web interfaces can be accessed at the following URLs:
 
 ### SCADA (Supervisory Control and Data Acquisition)
 
-**ScadaBR** web interface that monitors all PLC variables in real-time.
+A **ScadaBR** web interface that monitors and interacts with all PLC variables in real-time.
 
 The web interface can be accessed at:
 
 - http://localhost:8080/ScadaBR
 
-## Network Architecture
+## Network
 
 ```mermaid
 flowchart TB
@@ -81,17 +81,19 @@ linkStyle 7 stroke: transparent
 
 ### Configuration
 
-To run this configuration, switch to the appropriate branch:
+To run this configuration, switch to the virtual unsecure environment branch:
 ```bash
 git checkout unsafe-env
 ```
 
-Set up the .env file:
+Set up the `.env` file:
 ```bash
 mv .env.example .env
 ```
-- `OPENPLC_ADMIN` – **OpenPLC** webserver admin username
-- `OPENPLC_PASSWORD` – **OpenPLC** webserver admin password
+
+The following environment variables are the most important for the configuration:
+- `OPENPLC_ADMIN` – **OpenPLC** webserver admin username, default: `openplc`. Change this only if modified through the web interface
+- `OPENPLC_PASSWORD` – **OpenPLC** webserver admin password, default: `openplc`. Change this only if modified through the web interface
 
 ### Execution
     

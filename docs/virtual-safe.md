@@ -25,7 +25,7 @@ The following security components are implemented in the environment:
 
 ### SCADA (Supervisory Control and Data Acquisition)
 
-A **ScadaBR** web interface that monitors and interacts with all PLC variables in real-time.
+**ScadaBR** web interface that monitors and interacts with all PLC variables in real-time.
 
 ### Userhandler
 
@@ -91,7 +91,7 @@ The following environment variables are the most important for the configuration
 - `DATABASE_PASSWORD` – **PostgreSQL** password for the **WebAuthn** user database
 - `SECRET_KEY_GATEWAY` – secret key used by the **Logingateway** for secure sessions
 - `SECRET_KEY_USERHANDLER` – secret key used by the **Userhandler** for secure sessions
-- `ADMIN_INIT_TOKEN` – token required for `admin` registration on the userhandler on first access
+- `ADMIN_INIT_TOKEN` – token required for `admin` registration on the **Userhandler** on first access
 
 ### Execution
     

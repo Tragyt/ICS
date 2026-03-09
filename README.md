@@ -12,6 +12,6 @@ The repository includes multiple configurations of the network:
   Branch: `virtual-safe-env`
   Documentation: [docs/virtual-safe.md](docs/virtual-safe.md)
 
-- **Physical – Environment**
+- **Physical Environment**
   Branch: `main`
   Documentation: [docs/physical-safe.md](docs/physical-safe.md)

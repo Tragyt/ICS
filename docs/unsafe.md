@@ -22,7 +22,7 @@ The web interfaces can be accessed at the following URLs:
 
 ### SCADA (Supervisory Control and Data Acquisition)
 
-A **ScadaBR** web interface that monitors and interacts with all PLC variables in real-time.
+**ScadaBR** web interface that monitors and interacts with all PLC variables in real-time.
 
 The web interface can be accessed at:
 

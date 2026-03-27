@@ -7,14 +7,14 @@ RUN apt-get update && apt-get install --no-install-recommends -y postgresql-clie
 
 WORKDIR /app
 
-COPY ./webauth/logingateway/app ./logingateway/app
-COPY ./webauth/common/templates/ ./logingateway/app/templates/
-COPY ./webauth/common/*.py ./logingateway/common/ 
+COPY ./app ./logingateway/app
+COPY ./common/templates/ ./logingateway/app/templates/
+COPY ./common/*.py ./logingateway/common/ 
 
-COPY ./webauth/logingateway/requirements.txt .
+COPY ./requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./webauth/logingateway/entrypoint.sh /tmp/entrypoint.sh
+COPY ./entrypoint.sh /tmp/entrypoint.sh
 RUN chmod +x /tmp/entrypoint.sh
 
 WORKDIR /app/logingateway/app/

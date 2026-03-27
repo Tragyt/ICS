@@ -1,0 +1,4 @@
+bloccare logingateway da connessioni non ziti
+bloccare anche plc1 pl2 scada webserver
+
+mkcert -> usato per creare una CA sull'host di cui il browser si fida

@@ -1,3 +1,12 @@
+- name: nginx
+  hosts: [plc,scada]
+  ignore_unreachable: yes
+  tasks:
+    - name: copy dir
+      copy:
+        src: '../nginx'
+        dest: '/home/aces/'
+        mode: '0755'
 - name: install openplc
   hosts: plc
   become: yes
@@ -83,9 +92,6 @@
       shell: grep "dtparam=i2c_arm=on" /boot/firmware/config.txt
       register: i2c_status
       become: yes
-    # - name: debug i2c_status
-    #   debug:
-    #     var: i2c_status
     - name: enable i2c
       command: raspi-config nonint do_i2c 0
       when: i2c_status.rc is defined and i2c_status.rc != 0
@@ -125,7 +131,7 @@
       command: /home/aces/venv/bin/pip install -r /home/aces/requirements.txt
 
 - name: install docker
-  hosts: [scada,controller,router,db,userhandler,logingateway]
+  hosts: [scada,controller,router,db,userhandler,logingateway,plc]
   become: yes
   ignore_unreachable: yes
   tasks:
@@ -235,6 +241,16 @@
         dest: '/home/aces/ziti/setup_tunneler.sh'
         mode: '0755'
 
+- name: ziti logingateway tunneler
+  hosts: logingateway_tunneler
+  ignore_unreachable: yes
+  tasks:
+    - name: copy files
+      copy:
+        src: '../ziti/setup_logingateway_tunneler.sh'
+        dest: '/home/aces/ziti/setup_tunneler.sh'
+        mode: '0755'
+
 - name: ziti tunnelers
   hosts: tunneler
   ignore_unreachable: yes
@@ -338,8 +354,8 @@
         - { src: '../webauth/common', dest: '/home/aces/userhandler/'}
         - { src: '../webauth/userhandler/entrypoint.sh', dest: '/home/aces/userhandler/entrypoint.sh'}
         - { src: '../webauth/userhandler/requirements.txt', dest: '/home/aces/userhandler/requirements.txt'}
-        - { src: '../webauth/userhandler/rpi.userhandler-key.pem', dest: '/home/aces/userhandler/app/rpi.userhandler-key.pem'}
-        - { src: '../webauth/userhandler/rpi.userhandler.pem', dest: '/home/aces/userhandler/app/rpi.userhandler.pem'}
+        - { src: '../webauth/userhandler/userhandler.rpi.ics-key.pem', dest: '/home/aces/userhandler/app/userhandler.rpi.ics-key.pem'}
+        - { src: '../webauth/userhandler/userhandler.rpi.ics.pem', dest: '/home/aces/userhandler/app/userhandler.rpi.ics.pem'}
 
 - name: logingateway
   hosts: logingateway
@@ -353,3 +369,17 @@
         group: aces
         mode: '0755'
     - name: copy files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: '0755'
+      loop:
+        - { src: '../webauth/logingateway/.env.logingateway', dest: '/home/aces/logingateway/.env'}
+        - { src: '../webauth/logingateway/docker-compose.yaml', dest: '/home/aces/logingateway/docker-compose.yaml'}    
+        - { src: '../webauth/logingateway/Dockerfile', dest: '/home/aces/logingateway/Dockerfile'}
+        - { src: '../webauth/logingateway/app', dest: '/home/aces/logingateway/'}
+        - { src: '../webauth/common', dest: '/home/aces/logingateway/'}
+        - { src: '../webauth/logingateway/entrypoint.sh', dest: '/home/aces/logingateway/entrypoint.sh'}
+        - { src: '../webauth/logingateway/requirements.txt', dest: '/home/aces/logingateway/requirements.txt'}
+        - { src: '../webauth/logingateway/logingateway.rpi.ics-key.pem', dest: '/home/aces/logingateway/app/logingateway.rpi.ics-key.pem'}
+        - { src: '../webauth/logingateway/logingateway.rpi.ics.pem', dest: '/home/aces/logingateway/app/logingateway.rpi.ics.pem'}

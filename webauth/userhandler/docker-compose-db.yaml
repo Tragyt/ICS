@@ -3,17 +3,12 @@ services:
 
   db_user_handler:
     image: postgres:18.1
-    # container_name: db_user_handler
-    # depends_on:
-    #   ziti-tunneler-db:
-    #     condition: service_healthy
     volumes:
       - db_user_handler:/var/lib/postgresql
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: app
-    # network_mode: service:ziti-tunneler-db
     ports:
       - "5432:5432"
 

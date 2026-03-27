@@ -8,8 +8,8 @@ done
 flask db upgrade
 exec gunicorn \
     --bind 0.0.0.0:5000 \
-    --certfile rpi.userhandler.pem \
-    --keyfile rpi.userhandler-key.pem \
+    --certfile userhandler.rpi.ics.pem \
+    --keyfile userhandler.rpi.ics-key.pem \
     --workers 3 \
     --threads 3 \
     --timeout 120 \

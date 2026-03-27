@@ -14,6 +14,8 @@ ziti edge create identity "${IDENTITY}" -o /opt/openziti/etc/identities/"${IDENT
 
 if [ "$TYPE" == "host" ]; then  
 
+    ziti edge update identity "${IDENTITY}" --role-attributes "login_client"
+
     if ! ziti edge list configs | grep -q "plc${PLC}hostconf"; then
         ziti edge create config "plc${PLC}hostconf" host.v1 '{"protocol":"tcp", "address":"127.0.0.1", "port":502}'
     fi
@@ -50,6 +52,6 @@ fi
 
 if [ "$TYPE" == "scada" ]; then
 
-    ziti edge update identity "${IDENTITY}" --role-attributes "plc1_client,plc2_client"
+    ziti edge update identity "${IDENTITY}" --role-attributes "plc1_client,plc2_client,login_client"
 
 fi

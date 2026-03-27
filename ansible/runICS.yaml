@@ -72,7 +72,7 @@
     - name: create identity
       ansible.builtin.command: /home/aces/ziti/setup_tunneler.sh
       args:
-        creates: /opt/openziti/etc/identities/{{identity}}.jwt
+        creates: /opt/openziti/etc/identities/{{identity}}.json
       environment:
         IDENTITY: "{{identity | default(\"default\")}}"
         PLC: "{{plc_ziti | default(0)}}"
@@ -138,6 +138,43 @@
         jump: DROP
         state: absent
       tags: start
+
+- name: nginx
+  hosts: [plc,scada]
+  ignore_unreachable: yes
+  tasks:
+    - name: start nginx
+      community.docker.docker_compose_v2:
+        project_src: /home/aces/nginx
+        state: present
+      environment:
+        inventory_hostname: "{{ inventory_hostname }}"
+      tags: start_secure
+    - name: stop nginx
+      community.docker.docker_compose_v2:
+        project_src: /home/aces/nginx
+        state: absent
+      tags: stop
+    - name: accept only proxy traffic
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: 8080
+        in_interface: eth0
+        jump: DROP
+        state: present
+      become: true
+      tags: start_secure
+    - name: remove rule
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: 8080
+        in_interface: eth0
+        jump: DROP
+        state: absent
+      become: true
+      tags: stop
 
 - name: arm
   hosts: arm
@@ -231,7 +268,6 @@
         project_src: /home/aces/db
         state: present
       tags:
-        - start
         - start_secure
     - name: stop db container
       community.docker.docker_compose_v2:
@@ -272,14 +308,29 @@
   ignore_unreachable: yes
   tasks:
     - name: run userhandler container
-      ansible.builtin.shell: DATABASE_ADDRESS="{{db_address}}" docker compose up -d
+      ansible.builtin.shell: DATABASE_ADDRESS="{{db_address}}" docker compose up -d --build
       args:
         chdir: /home/aces/userhandler
       tags: 
-        - start
         - start_secure
     - name: stop userhandler container
       community.docker.docker_compose_v2:
         project_src: /home/aces/userhandler
+        state: absent
+      tags: stop
+
+- name: logingateway
+  hosts: logingateway
+  ignore_unreachable: yes
+  tasks:
+    - name: run logingateway container
+      ansible.builtin.shell: DATABASE_ADDRESS="{{db_address}}" docker compose up -d --build
+      args:
+        chdir: /home/aces/logingateway
+      tags: 
+        - start_secure
+    - name: stop logingateway container
+      community.docker.docker_compose_v2:
+        project_src: /home/aces/logingateway
         state: absent
       tags: stop

@@ -551,10 +551,6 @@ services:
       ZITI_ROUTER_MODE: ${ZITI_ROUTER_MODE:-tproxy}
       ZITI_AUTO_RENEW_CERTS: true
       ZITI_ROUTER_TYPE: ${ZITI_ROUTER_TYPE:-edge}
-    # ports:
-    #   - target: 8080
-    #     published: 8080
-    #     host_ip: 127.0.0.1 
     networks:
       - ziti
     command: run config.yml

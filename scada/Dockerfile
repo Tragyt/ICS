@@ -17,7 +17,6 @@ WORKDIR /app
 RUN rm -rf /tmp/ScadaBR
 
 COPY backup/ /backup
-RUN ij /backup/import.del
 
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh

@@ -8,6 +8,12 @@ import serial
 from pyModbusTCP.client import ModbusClient
 
 PLC_ADDRESS = os.environ["PLC_ADDRESS"]
+CONVEYOR = os.environ["CONVEYOR"]
+STOPPED = False
+if CONVEYOR == "1":
+    DIRECTION = "backward"
+else:
+    DIRECTION = "forward"
 
 """
     {"action": "START", "speed":60, "direction":"forward"}
@@ -17,7 +23,7 @@ PLC_ADDRESS = os.environ["PLC_ADDRESS"]
 def move_conveyor(ser: serial.Serial, speed):
     if not (speed > 0 and speed <= 100):
         speed = 50
-    cmd = {"action": "start", "speed":speed, "direction":"forward"}
+    cmd = {"action": "start", "speed":speed, "direction":DIRECTION}
     json_cmd = json.dumps(cmd)+"\n"
     ser.write(json_cmd.encode('utf-8'))
 
@@ -25,6 +31,7 @@ def stop_conveyor(ser: serial.Serial):
     cmd = {"action":"stop"}
     json_cmd=json.dumps(cmd)+"\n"
     ser.write(json_cmd.encode('utf-8'))
+    STOPPED = True
 
 def read_coil(client, n):
     ret = None
@@ -57,6 +64,7 @@ try:
     while client.open():
         run = read_coil(client,2)
         if run:
+            STOPPED = False
             move = read_coil(client,9)
             speed = get_speed(client)
             if (not moving and move) or speed != current_speed:
@@ -66,7 +74,7 @@ try:
             elif moving and not move:
                 moving = False
                 stop_conveyor(ser)
-        else:
+        elif not STOPPED:
             stop_conveyor(ser)
         sleep(0.2)
     stop_conveyor(ser)

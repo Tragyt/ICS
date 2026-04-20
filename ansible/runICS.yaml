@@ -117,7 +117,9 @@
       ansible.builtin.iptables:
         chain: INPUT
         protocol: tcp
-        destination_port: 502
+        destination_ports:
+        - "502"
+        - "8080"
         in_interface: lo
         jump: ACCEPT
         state: present
@@ -126,7 +128,9 @@
       ansible.builtin.iptables:
         chain: INPUT
         protocol: tcp
-        destination_port: 502
+        destination_ports:
+        - "502"
+        - "8080"
         jump: DROP
         state: present
       tags: start_secure
@@ -134,7 +138,9 @@
       ansible.builtin.iptables:
         chain: INPUT
         protocol: tcp
-        destination_port: 502
+        destination_ports:
+        - "502"
+        - "8080"
         jump: DROP
         state: absent
       tags: start
@@ -187,6 +193,7 @@
       poll: 0
       environment:
         PLC_ADDRESS: "{{plc_address}}"
+        ARM: "{{plc_ziti}}"
       tags: 
         - start
         - start_secure
@@ -227,6 +234,7 @@
       poll: 0
       environment:
         PLC_ADDRESS: "{{plc_address}}"
+        CONVEYOR: "{{plc_ziti}}"
       tags: 
         - start
         - start_secure

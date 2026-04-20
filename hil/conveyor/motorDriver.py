@@ -84,11 +84,11 @@ class MotorDriver():
     def __init__(self, debug=False):
         self.debug = debug
         self.pwm = PCA9685()
-        self.pwm.setPWMFreq(100)       
+        self.pwm.setPWMFreq(1000)       
         self.MotorPin = ['MA', 0,1,2, 'MB',3,4,5, 'MC',6,7,8, 'MD',9,10,11]
         self.MotorDir = ['forward', 0,1, 'backward',1,0]
 
-    def MotorRun(self, motor, mdir, speed, runtime):
+    def MotorRun(self, motor, mdir, speed):
         if speed > 100:
             return
         
@@ -105,11 +105,11 @@ class MotorDriver():
         self.pwm.setLevel(self.MotorPin[mPin+2], self.MotorDir[mDir+1])
         self.pwm.setLevel(self.MotorPin[mPin+3], self.MotorDir[mDir+2])
         
-        time.sleep(runtime)
-        print("Stopping motor")
-        self.pwm.setServoPulse(self.MotorPin[mPin+1], 0)
-        self.pwm.setLevel(self.MotorPin[mPin+2], 0)
-        self.pwm.setLevel(self.MotorPin[mPin+3], 0)
+#         time.sleep(runtime)
+#         print("Stopping motor")
+#         self.pwm.setServoPulse(self.MotorPin[mPin+1], 0)
+#         self.pwm.setLevel(self.MotorPin[mPin+2], 0)
+#         self.pwm.setLevel(self.MotorPin[mPin+3], 0)
 
     def MotorStop(self, motor):
         mPin = self.MotorPin.index(motor)

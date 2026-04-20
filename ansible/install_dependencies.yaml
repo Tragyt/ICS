@@ -149,6 +149,21 @@
         name: aces
         groups: docker
         append: yes
+    - name: create docker cli plugins dir
+      file:
+        path: /home/aces/.docker/cli-plugins
+        state: directory
+        owner: aces
+        group: aces
+        mode: '0755'
+
+    - name: install docker compose plugin (64 bit)
+      get_url:
+        url: https://github.com/docker/compose/releases/latest/download/docker-compose-linux-aarch64
+        dest: /home/aces/.docker/cli-plugins/docker-compose
+        owner: aces
+        group: aces
+        mode: '0755'
 
 - name: scada
   hosts: scada

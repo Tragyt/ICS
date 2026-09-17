@@ -15,3 +15,6 @@ The repository includes multiple configurations of the network:
 - **Physical Environment**
   Branch: `main`
   Documentation: [docs/physical-safe.md](docs/physical-safe.md)
+
+## License
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
